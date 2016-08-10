@@ -1,0 +1,451 @@
+module Pascal
+
+imports Common
+
+context-free start-symbols Program
+
+context-free syntax // Programs and Blocks
+  
+  Program.Program = <
+    <Programheading> 
+    <Block>.
+  >
+
+  Programheading.ProgramHeading = 
+    <program <Identifier> (<{Identifier ","}*>) ;>
+
+  Block.Block = 
+    <<Declarationpart> <Statementpart>>
+ 
+  Declarationpart.Decl = <
+    <Labeldeclarationpart?>
+    <Constantdefinitionpart?>
+    <Typedefinitionpart?>
+    <Variabledeclarationpart?>
+    <ProcedureOrFunctionDeclaration*>
+  >
+
+  Labeldeclarationpart.LabelDecls =
+    <label <{Label ","}+>;>
+
+  Constantdefinitionpart.Constants =
+    <const <Constantdefinition+>>
+
+  Constantdefinition.ConstDef =
+    <<Identifier> = <Constant>;>
+
+  Typedefinitionpart.TypeDefs =
+    <type <Typedefinition+>>
+
+  Typedefinition.TypeDef =
+    <<Identifier> = <Type>;>
+
+  Variabledeclarationpart.VarDecls =
+    <var <Variabledeclaration+>>
+
+  Variabledeclaration.VarDecl =
+    <<{Identifier ","}*> : <Type>;>
+    
+  ProcedureOrFunctionDeclaration =
+    Proceduredeclaration
+  
+  ProcedureOrFunctionDeclaration = 
+    Functiondeclaration
+
+  Proceduredeclaration.ProcDecl =
+    <<Procedureheading>; <Procedurebody>;>
+    
+  Proceduredeclaration.ProcDirective =
+    <<Procedureheading>; <Directive>;>
+    
+  Proceduredeclaration.ProcId =
+    <<Procedureidentification>; <Procedurebody>;>
+
+  Procedurebody = Block
+
+  Functiondeclaration.FuncDecl =
+    <<Functionheading>; <Functionbody>;>
+     
+  Functiondeclaration.FuncDirective =
+    <<Functionheading>; <Directive>;>
+    
+  Functiondeclaration.FuncId =
+    <<Functionidentification>; <Functionbody>;>
+
+  Functionbody = Block
+
+  Directive.Forward = <forward>
+  // Directive = Compilerdefineddirectives
+  
+  Statementpart.Statements = <
+    begin  
+      <{Statement ";"}+>
+    end
+  >
+
+context-free syntax // Procedure and Function Definitions
+
+  Procedureheading.ProcHeading =
+    <procedure <Identifier> <Formalparameterlist?>>
+    
+  Functionheading.FuncHeading =
+    <function <Identifier> <Formalparameterlist?> : <Resulttype>>
+
+  Resulttype = Typeidentifier
+
+  Procedureidentification.ProcId =
+    <procedure <Procedureidentifier>>
+
+  Functionidentification.FuncId =
+    <function <Functionidentifier>>
+
+  Formalparameterlist.Params =
+    <(<{Formalparametersection ";"}+>)>
+
+  Formalparametersection = Valueparametersection 
+  Formalparametersection = Variableparametersection
+  Formalparametersection = Procedureparametersection
+  Formalparametersection = Functionparametersection
+
+  Valueparametersection.ValueParams =
+    <<{Identifier ","}+> : <Parametertype>>
+
+  Variableparametersection.VarParams =
+    <var <{Identifier ","}+> : <Parametertype>>
+
+  Procedureparametersection = Procedureheading
+
+  Functionparametersection = Functionheading
+
+  Parametertype = Typeidentifier 
+  Parametertype = Conformantarrayschema
+
+  Conformantarrayschema = Packedconformantarrayschema 
+  Conformantarrayschema = Unpackedconformantarrayschema
+
+  Packedconformantarrayschema.PackedArray = 
+    <packed array [<Boundspecification>] of <Typeidentifier>>
+
+  Unpackedconformantarrayschema.UnpackedArray =
+    <array [<{Boundspecification ";"}+>] of <ArrayType>>
+    
+  ArrayType = Typeidentifier 
+  ArrayType = Conformantarrayschema
+
+  Boundspecification.BoundSpec =
+    <<Identifier> .. <Identifier> : <Ordinaltypeidentifier>>
+
+  Ordinaltypeidentifier = Typeidentifier
+
+context-free syntax // Statements
+
+  //Statementsequence = {Statement ";"}+
+  
+  Statement.Labeled =
+    <<Label> : <Stat>>
+    
+  Statement = Stat
+    
+  Stat = Simplestatement 
+  Stat = Structuredstatement
+      
+  Simplestatement = Assignmentstatement 
+  Simplestatement = Procedurestatement  
+  Simplestatement = Gotostatement 
+
+  Assignmentstatement.Assign =
+    <<Identifier> := <Expression>>
+
+  LValue = Variable 
+  LValue = Functionidentifier
+
+  Procedurestatement.ProcCall =
+    <<Identifier> <Actualparameterlist>>
+    
+  Gotostatement.Goto =
+    <goto <Label>>
+    
+  Structuredstatement = Compoundstatement 
+  Structuredstatement = Repetitivestatement 
+  Structuredstatement = Conditionalstatement 
+  Structuredstatement = Withstatement
+  
+  Compoundstatement.Compound = <
+    begin 
+      <{Statement ";"}+> 
+    end
+  >
+  
+  Repetitivestatement = Whilestatement 
+  Repetitivestatement = Repeatstatement 
+  Repetitivestatement = Forstatement
+  
+  Whilestatement.While = <
+    while <Expression> do 
+      <Statement>
+  >
+  
+  Repeatstatement.Repeat = <
+    repeat 
+      <{Statement ";"}+> 
+    until <Expression>
+  >
+  
+  Forstatement.For = <
+    for <Variableidentifier> := <Initialexpression> <UpDown> <Finalexpression> do 
+      <Statement>
+  >
+  
+  UpDown.Up = <to>
+  UpDown.Down = <downto>
+  
+  Initialexpression = Expression
+  Finalexpression = Expression
+
+  Conditionalstatement = Ifstatement 
+  Conditionalstatement = Casestatement
+
+  Ifstatement.If = <
+    if <Expression> then 
+      <Statement>
+  >
+  Ifstatement.IfElse = <
+    if <Expression> then 
+      <Statement>
+    else 
+      <Statement>
+  >
+  
+  Casestatement.Case = <
+    case <Expression> of
+      <Caselimb+>
+    end
+  >
+  
+  Caselimb.CaseLimb = 
+    <<{Constant ","}+> : <Statement>;>
+
+//  Caselabellist = {Constant ","}+
+
+  Withstatement.With = <
+    with <{Recordvariable ","}+> do
+      <Statement>
+  >
+  
+  Actualparameterlist.Params = <
+    (<{Actualparameter ","}*>)
+  >
+  
+  Actualparameter = Actualvalue 
+  Actualparameter = Actualvariable 
+  Actualparameter = Actualprocedure 
+  Actualparameter = Actualfunction
+ 
+  Actualvalue     = Expression
+  Actualprocedure = Procedureidentifier
+  Actualfunction  = Functionidentifier
+
+context-free syntax // Expressions
+  
+  Expression.Sign  = <<Sign> <Expression>>
+  Expression.RelOp = <<Expression> <Relationaloperator> <Expression>>  
+  Expression.AddOp = <<Expression> <Additionoperator> <Expression>>
+  
+  Expression.MulOp = <<Expression> <Multiplicationoperator> <Expression>>
+  
+context-free priorities
+
+  Expression.Sign > Expression.MulOp > Expression.AddOp > Expression.RelOp,
+  
+  Expression.Not > Expression.RelOp
+  
+context-free syntax
+
+  Expression.Var = Variable
+  Expression = Number
+  Expression = String
+  Expression = Set
+  Expression.NilE = <nil>
+  Expression = Constantidentifier
+  Expression = Boundidentifier
+  Expression = Functiondesignator
+  Expression = <(<Expression>)> {bracket}
+  Expression.Not = <not <Expression>>
+
+  Relationaloperator.Eq  = [=] 
+  Relationaloperator.NEQ = [<>] 
+  Relationaloperator.LT  = [<]
+  Relationaloperator.LEQ = [<=] 
+  Relationaloperator.GT  = [>]
+  Relationaloperator.GEQ = [>=] 
+  Relationaloperator.IN  = <in>
+  
+  Additionoperator.ADD = <+>
+  Additionoperator.MIN = <-> 
+  Additionoperator.OR = <or>
+
+  Multiplicationoperator.MUL = <*>
+  Multiplicationoperator.DIV = </>
+  Multiplicationoperator.IDIV = <div>
+  Multiplicationoperator.MOD = <mod>
+  Multiplicationoperator.AND = <and>
+
+  Variable = Entirevariable 
+  Variable = Componentvariable 
+  Variable = Referencedvariable
+  
+  Entirevariable = Variableidentifier
+  Entirevariable = Fieldidentifier
+
+  Componentvariable = Indexedvariable 
+  Componentvariable = Fielddesignator
+  Componentvariable = Filebuffer
+
+  Indexedvariable.IndexVar = 
+    <<Arrayvariable> [<{Expression ","}*>]>
+    
+  Fielddesignator.FieldAccess =
+    <<Recordvariable>.<Fieldidentifier>>
+  
+  Set.Set = <[<{Expression ","}*>]>
+
+  Functiondesignator.FunCall = 
+    <<Functionidentifier><Actualparameterlist?>>
+    
+  Filebuffer.FileVar = 
+    <<Filevariable>^>
+
+context-free syntax // Types
+
+  Type = Simpletype 
+  Type = Structuredtype 
+  Type = Pointertype 
+  Type = Typeidentifier
+
+  Simpletype = Subrangetype 
+  Simpletype = Enumeratedtype
+  
+  Enumeratedtype.EnumType = <(<{Identifier ","}+>)>
+  
+  Subrangetype.SubrangeType =
+    <<Lowerbound> .. <Upperbound>>
+    
+  Lowerbound = Constant
+  Upperbound = Constant
+
+  Structuredtype = Unpackedstructuredtype
+  Structuredtype.Packed = 
+    <packed <Unpackedstructuredtype>>
+    
+  Unpackedstructuredtype = Arraytype 
+  Unpackedstructuredtype = Recordtype 
+  Unpackedstructuredtype = Settype 
+  Unpackedstructuredtype = Filetype
+  
+  Arraytype.ArrayType = 
+    <array [<{Indextype ","}+>] of <Elementtype>>
+    
+  Indextype = Simpletype
+  Elementtype = Type
+
+  Recordtype.RecordType = <
+    record  
+      <Fieldlist>
+    end
+  >
+
+  Settype.SetType = 
+    <set of <Basetype>>
+    
+  Basetype = Type
+
+  Filetype.FileType = 
+    <file of <Filecomponenttype>>
+    
+  Filecomponenttype = Type
+
+  Pointertype.PointerType = 
+    <^ <Typeidentifier>>
+
+context-free syntax // Record Fields
+
+  Fieldlist.Fields = <<Recordsection*> <Variantpart>>
+
+  Recordsection.Fields =
+    <<{Identifier ","}+> : <Type>;>
+
+  Variantpart.Variant = <
+    case <Tagfield?> <Typeidentifier> of 
+      <{Variant ";"}+>;
+  >
+
+  Tagfield.Tag = <<Identifier> :>
+
+  Variant.Variant = 
+    <<{Constant ","}+> : (<Fieldlist>)>
+
+context-free syntax // Input/Output
+
+//  Outputlist = {Outputvalue ","}+
+  
+//  Outputvalue = <<Expression> ; <Fieldwidth> : <Fractionlength>>
+//  Outputvalue = <<Expression> ; <Fieldwidth>>
+//  Outputvalue = Expression
+  
+  Fieldwidth = Expression
+  Fractionlength = Expression
+
+lexical syntax // Variable and Identifier Categories
+
+  Identifier = [a-zA-Z][a-zA-Z0-9]*
+  
+lexical restrictions
+
+  Identifier -/- [a-zA-Z0-9]
+  
+context-free syntax
+
+  Referencedvariable.RefVar  = <<Pointervariable>^>
+  
+  Filevariable        = Variable
+  Recordvariable      = Variable
+  Pointervariable     = Variable
+  Actualvariable      = Variable
+  Arrayvariable       = Variable
+  
+  Fieldidentifier     = Identifier
+  Constantidentifier  = Identifier
+  Variableidentifier  = Identifier
+  Typeidentifier      = Identifier
+  Procedureidentifier = Identifier
+  Functionidentifier  = Identifier
+  Boundidentifier     = Identifier
+
+context-free syntax // Low Level Definitions
+ 
+  Label = Integernumber
+  
+  Constant.ConstId = Sign? Constantidentifier 
+  Constant         = Number
+  Constant.String  = String
+   
+  Number.Int  = Integernumber 
+  Number.Real = Realnumber
+  
+  Sign.Pos = <+>
+  Sign.Neg = <->
+  
+lexical syntax
+  
+  Integernumber = Digitsequence
+  Realnumber    = Digitsequence "." Digitsequence? Scalefactor?
+  Realnumber    = Digitsequence Scalefactor
+  Scalefactor   = [Ee] Sign? Digitsequence
+
+  Unsigneddigitsequence = [0-9]+
+  Digitsequence = Sign? Unsigneddigitsequence
+  Sign = [\+\-]
+
+  String = "'" Stringcharacter+  "'"
+  Stringcharacter = ~[\'] 
+  Stringcharacter = "''"

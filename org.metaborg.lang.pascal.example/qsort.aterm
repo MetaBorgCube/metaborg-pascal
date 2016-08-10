@@ -1,0 +1,375 @@
+Program(
+  ProgramHeading("Sort", ["input", "output"])
+, Block(
+    Decl(
+      None()
+    , Some(Constants([ConstDef("MaxElts", Int("50"))]))
+    , Some(
+        TypeDefs(
+          [ TypeDef(
+              "IntArrType"
+            , ArrayType(
+                [ SubrangeType(
+                    Int("1")
+                  , ConstId(amb([None(), Some("")]), "MaxElts")
+                  )
+                ]
+              , "Integer"
+              )
+            )
+          ]
+        )
+      )
+    , Some(
+        VarDecls(
+          [ VarDecl(["i", "j", "tmp", "size"], "integer")
+          , VarDecl(["arr"], "IntArrType")
+          ]
+        )
+      )
+    , [ ProcDecl(
+          ProcHeading(
+            "ReadArr"
+          , Some(
+              Params(
+                [VarParams(["size"], "Integer"), VarParams(["a"], "IntArrType")]
+              )
+            )
+          )
+        , Block(
+            Decl(None(), None(), None(), None(), [])
+          , Statements(
+              [ Assign("size", Int("1"))
+              , amb(
+                  [ While(
+                      Not(FunCall("eof", None()))
+                    , Compound(
+                        [ ProcCall(
+                            "readln"
+                          , Params(
+                              [ amb(
+                                  [ IndexVar(
+                                      amb(["a", "a"])
+                                    , [ amb(
+                                          [ amb(
+                                              [amb(["size", "size"]), Var(amb(["size", "size"]))]
+                                            )
+                                          , FunCall("size", None())
+                                          ]
+                                        )
+                                      ]
+                                    )
+                                  , Var(
+                                      IndexVar(
+                                        amb(["a", "a"])
+                                      , [ amb(
+                                            [ amb(
+                                                [amb(["size", "size"]), Var(amb(["size", "size"]))]
+                                              )
+                                            , FunCall("size", None())
+                                            ]
+                                          )
+                                        ]
+                                      )
+                                    )
+                                  ]
+                                )
+                              ]
+                            )
+                          )
+                        , amb(
+                            [ If(
+                                Not(FunCall("eof", None()))
+                              , Assign(
+                                  "size"
+                                , amb(
+                                    [ AddOp(FunCall("size", None()), ADD(), Int("1"))
+                                    , AddOp(
+                                        amb(
+                                          [amb(["size", "size"]), Var(amb(["size", "size"]))]
+                                        )
+                                      , ADD()
+                                      , Int("1")
+                                      )
+                                    ]
+                                  )
+                                )
+                              )
+                            , If(
+                                Not(
+                                  amb(
+                                    [amb(["eof", "eof"]), Var(amb(["eof", "eof"]))]
+                                  )
+                                )
+                              , Assign(
+                                  "size"
+                                , amb(
+                                    [ AddOp(FunCall("size", None()), ADD(), Int("1"))
+                                    , AddOp(
+                                        amb(
+                                          [amb(["size", "size"]), Var(amb(["size", "size"]))]
+                                        )
+                                      , ADD()
+                                      , Int("1")
+                                      )
+                                    ]
+                                  )
+                                )
+                              )
+                            ]
+                          )
+                        ]
+                      )
+                    )
+                  , While(
+                      Not(
+                        amb(
+                          [amb(["eof", "eof"]), Var(amb(["eof", "eof"]))]
+                        )
+                      )
+                    , Compound(
+                        [ ProcCall(
+                            "readln"
+                          , Params(
+                              [ amb(
+                                  [ IndexVar(
+                                      amb(["a", "a"])
+                                    , [ amb(
+                                          [ amb(
+                                              [amb(["size", "size"]), Var(amb(["size", "size"]))]
+                                            )
+                                          , FunCall("size", None())
+                                          ]
+                                        )
+                                      ]
+                                    )
+                                  , Var(
+                                      IndexVar(
+                                        amb(["a", "a"])
+                                      , [ amb(
+                                            [ amb(
+                                                [amb(["size", "size"]), Var(amb(["size", "size"]))]
+                                              )
+                                            , FunCall("size", None())
+                                            ]
+                                          )
+                                        ]
+                                      )
+                                    )
+                                  ]
+                                )
+                              ]
+                            )
+                          )
+                        , amb(
+                            [ If(
+                                Not(FunCall("eof", None()))
+                              , Assign(
+                                  "size"
+                                , amb(
+                                    [ AddOp(FunCall("size", None()), ADD(), Int("1"))
+                                    , AddOp(
+                                        amb(
+                                          [amb(["size", "size"]), Var(amb(["size", "size"]))]
+                                        )
+                                      , ADD()
+                                      , Int("1")
+                                      )
+                                    ]
+                                  )
+                                )
+                              )
+                            , If(
+                                Not(
+                                  amb(
+                                    [amb(["eof", "eof"]), Var(amb(["eof", "eof"]))]
+                                  )
+                                )
+                              , Assign(
+                                  "size"
+                                , amb(
+                                    [ AddOp(FunCall("size", None()), ADD(), Int("1"))
+                                    , AddOp(
+                                        amb(
+                                          [amb(["size", "size"]), Var(amb(["size", "size"]))]
+                                        )
+                                      , ADD()
+                                      , Int("1")
+                                      )
+                                    ]
+                                  )
+                                )
+                              )
+                            ]
+                          )
+                        ]
+                      )
+                    )
+                  ]
+                )
+              ]
+            )
+          )
+        )
+      ]
+    )
+  , Statements(
+      [ ProcCall(
+          "ReadArr"
+        , Params(
+            [ amb(
+                [ amb(
+                    [ amb(["size", "size"])
+                    , amb(
+                        [ amb(
+                            [amb(["size", "size"]), Var(amb(["size", "size"]))]
+                          )
+                        , FunCall("size", None())
+                        ]
+                      )
+                    ]
+                  )
+                , amb(["size", "size"])
+                ]
+              )
+            , amb(
+                [ amb(
+                    [ amb(["arr", "arr"])
+                    , amb(
+                        [ amb(
+                            [amb(["arr", "arr"]), Var(amb(["arr", "arr"]))]
+                          )
+                        , FunCall("arr", None())
+                        ]
+                      )
+                    ]
+                  )
+                , amb(["arr", "arr"])
+                ]
+              )
+            ]
+          )
+        )
+      , ProcCall(
+          "Quicksort"
+        , Params(
+            [ amb(
+                [ amb(
+                    [ amb(["size", "size"])
+                    , amb(
+                        [ amb(
+                            [amb(["size", "size"]), Var(amb(["size", "size"]))]
+                          )
+                        , FunCall("size", None())
+                        ]
+                      )
+                    ]
+                  )
+                , amb(["size", "size"])
+                ]
+              )
+            , amb(
+                [ amb(
+                    [ amb(["arr", "arr"])
+                    , amb(
+                        [ amb(
+                            [amb(["arr", "arr"]), Var(amb(["arr", "arr"]))]
+                          )
+                        , FunCall("arr", None())
+                        ]
+                      )
+                    ]
+                  )
+                , amb(["arr", "arr"])
+                ]
+              )
+            ]
+          )
+        )
+      , amb(
+          [ For(
+              "i"
+            , Int("1")
+            , Up()
+            , FunCall("size", None())
+            , ProcCall(
+                "writeln"
+              , Params(
+                  [ amb(
+                      [ IndexVar(
+                          amb(["arr", "arr"])
+                        , [ amb(
+                              [ amb(
+                                  [amb(["i", "i"]), Var(amb(["i", "i"]))]
+                                )
+                              , FunCall("i", None())
+                              ]
+                            )
+                          ]
+                        )
+                      , Var(
+                          IndexVar(
+                            amb(["arr", "arr"])
+                          , [ amb(
+                                [ amb(
+                                    [amb(["i", "i"]), Var(amb(["i", "i"]))]
+                                  )
+                                , FunCall("i", None())
+                                ]
+                              )
+                            ]
+                          )
+                        )
+                      ]
+                    )
+                  ]
+                )
+              )
+            )
+          , For(
+              "i"
+            , Int("1")
+            , Up()
+            , amb(
+                [amb(["size", "size"]), Var(amb(["size", "size"]))]
+              )
+            , ProcCall(
+                "writeln"
+              , Params(
+                  [ amb(
+                      [ IndexVar(
+                          amb(["arr", "arr"])
+                        , [ amb(
+                              [ amb(
+                                  [amb(["i", "i"]), Var(amb(["i", "i"]))]
+                                )
+                              , FunCall("i", None())
+                              ]
+                            )
+                          ]
+                        )
+                      , Var(
+                          IndexVar(
+                            amb(["arr", "arr"])
+                          , [ amb(
+                                [ amb(
+                                    [amb(["i", "i"]), Var(amb(["i", "i"]))]
+                                  )
+                                , FunCall("i", None())
+                                ]
+                              )
+                            ]
+                          )
+                        )
+                      ]
+                    )
+                  ]
+                )
+              )
+            )
+          ]
+        )
+      ]
+    )
+  )
+)

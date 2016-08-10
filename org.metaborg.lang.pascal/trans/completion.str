@@ -1,0 +1,11 @@
+module completion
+
+imports
+  
+  runtime/completion/-
+  completion/Pascal-cp
+  pp
+  
+rules
+  
+  pp-completion = pp-partial-Pascal-string

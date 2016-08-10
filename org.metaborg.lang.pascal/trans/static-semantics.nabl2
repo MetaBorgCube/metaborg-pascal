@@ -1,0 +1,17 @@
+module static-semantics
+
+imports
+
+  signatures/-
+
+rules
+
+  init ^ (s) := new s.
+
+  [[ Program(h, b) ^ (s) ]] :=
+    [[ b ^ (s) ]].
+    
+  [[ Block(_, _) ^ (s) ]] := true.
+    
+// false | note "Specify name binding and typing rules in static-semantics.nabl2".
+
