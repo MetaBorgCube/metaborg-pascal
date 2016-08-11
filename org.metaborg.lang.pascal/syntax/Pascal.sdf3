@@ -12,70 +12,78 @@ context-free syntax // Programs and Blocks
   Programheading.ProgramHeading = 
     <program <Identifier> (<{Identifier ","}*>) ;>
 
-  Block.Block = 
-    <<Declarationpart> <Statementpart>>
- 
-  Declarationpart.Decl = <
-    <Labeldeclarationpart?>
-    <Constantdefinitionpart?>
-    <Typedefinitionpart?>
-    <Variabledeclarationpart?>
+  Block.Block = <
+    <LabelDeclarations>
+    <ConstantDefinitions>
+    <TypeDefinitions>
+    <VariableDeclarations>
     <ProcedureOrFunctionDeclaration*>
+    <Statements>
   >
+  
+  LabelDeclarations.NoLabelDecls = <>
 
-  Labeldeclarationpart.LabelDecls =
-    <label <{Label ","}+>;>
+  LabelDeclarations.LabelDecls =
+    <label 
+       <{Label ","}*>;>
 
-  Constantdefinitionpart.Constants =
-    <const <Constantdefinition+>>
+  ConstantDefinitions.NoConstDefs = <>
+  
+  ConstantDefinitions.ConstDefs =
+    <const 
+       <{ConstantDefinition "\n"}*>>
 
-  Constantdefinition.ConstDef =
+  ConstantDefinition.ConstDef =
     <<Identifier> = <Constant>;>
 
-  Typedefinitionpart.TypeDefs =
-    <type <Typedefinition+>>
+  TypeDefinitions.NoTypeDefs = <>
+  
+  TypeDefinitions.TypeDefs =
+    <type 
+       <{TypeDefinition "\n"}*>>
 
-  Typedefinition.TypeDef =
+  TypeDefinition.TypeDef =
     <<Identifier> = <Type>;>
 
-  Variabledeclarationpart.VarDecls =
-    <var <Variabledeclaration+>>
-
-  Variabledeclaration.VarDecl =
-    <<{Identifier ","}*> : <Type>;>
-    
-  ProcedureOrFunctionDeclaration =
-    Proceduredeclaration
+  VariableDeclarations.NoVarDecls = <>
   
-  ProcedureOrFunctionDeclaration = 
-    Functiondeclaration
+  VariableDeclarations.VarDecls =
+    <var 
+       <{VariableDeclaration "\n"}*>>
 
-  Proceduredeclaration.ProcDecl =
-    <<Procedureheading>; <Procedurebody>;>
+  VariableDeclaration.VarDecl =
+    <<{Identifier ","}*> : <Type>;>
+
+context-free syntax // procedure and function declarations
+
+  ProcedureOrFunctionDeclaration.ProcDecl =
+    <<ProcedureHeading>;
+     <Block>;>
     
-  Proceduredeclaration.ProcDirective =
-    <<Procedureheading>; <Directive>;>
+  ProcedureOrFunctionDeclaration.ProcDirective =
+    <<ProcedureHeading>;
+     <Directive>;>
     
-  Proceduredeclaration.ProcId =
-    <<Procedureidentification>; <Procedurebody>;>
+  ProcedureOrFunctionDeclaration.ProcId =
+    <<ProcedureIdentification>;
+     <Block>;>
 
-  Procedurebody = Block
-
-  Functiondeclaration.FuncDecl =
-    <<Functionheading>; <Functionbody>;>
+  ProcedureOrFunctionDeclaration.FuncDecl =
+    <<FunctionHeading>; 
+     <Block>;>
      
-  Functiondeclaration.FuncDirective =
-    <<Functionheading>; <Directive>;>
+  ProcedureOrFunctionDeclaration.FuncDirective =
+    <<FunctionHeading>; 
+     <Directive>;>
     
-  Functiondeclaration.FuncId =
-    <<Functionidentification>; <Functionbody>;>
-
-  Functionbody = Block
+  ProcedureOrFunctionDeclaration.FuncId =
+    <<FunctionIdentification>;
+     <Block>;>
 
   Directive.Forward = <forward>
   // Directive = Compilerdefineddirectives
   
-  Statementpart.Statements = <
+  Statements.Statements = <
     begin  
       <{Statement ";"}+>
     end
@@ -83,57 +91,53 @@ context-free syntax // Programs and Blocks
 
 context-free syntax // Procedure and Function Definitions
 
-  Procedureheading.ProcHeading =
-    <procedure <Identifier> <Formalparameterlist?>>
+  ProcedureHeading.ProcHeading =
+    <procedure <Identifier> <FormalParameters>>
     
-  Functionheading.FuncHeading =
-    <function <Identifier> <Formalparameterlist?> : <Resulttype>>
+  FunctionHeading.FuncHeading =
+    <function <Identifier> <FormalParameters> : <ResultType>>
 
-  Resulttype = Typeidentifier
+  ResultType = TypeIdentifier
 
-  Procedureidentification.ProcId =
+  ProcedureIdentification.ProcId =
     <procedure <Identifier>>
 
-  Functionidentification.FuncId =
+  FunctionIdentification.FuncId =
     <function <Identifier>>
 
-  Formalparameterlist.Params =
-    <(<{Formalparametersection ";"}+>)>
+  FormalParameters.NoParams = <>
+  
+  FormalParameters.Params =
+    <(<{FormalParameter ";"}+>)>
+    
+  FormalParameter.ValueParams =
+    <<{Identifier ","}+> : <ParameterType>>
 
-  Formalparametersection = Valueparametersection 
-  Formalparametersection = Variableparametersection
-  Formalparametersection = Procedureparametersection
-  Formalparametersection = Functionparametersection
+  FormalParameter.VarParams =
+    <var <{Identifier ","}+> : <ParameterType>>
 
-  Valueparametersection.ValueParams =
-    <<{Identifier ","}+> : <Parametertype>>
+  FormalParameter = ProcedureHeading
+  FormalParameter = FunctionHeading
 
-  Variableparametersection.VarParams =
-    <var <{Identifier ","}+> : <Parametertype>>
+  ParameterType = TypeIdentifier 
+  ParameterType = ConformantArraySchema
 
-  Procedureparametersection = Procedureheading
+  ConformantArraySchema = PackedConformantArraySchema 
+  ConformantArraySchema = UnpackedConformantArraySchema
 
-  Functionparametersection = Functionheading
+  PackedConformantArraySchema.PackedArray = 
+    <packed array [<Boundspecification>] of <TypeIdentifier>>
 
-  Parametertype = Typeidentifier 
-  Parametertype = Conformantarrayschema
-
-  Conformantarrayschema = Packedconformantarrayschema 
-  Conformantarrayschema = Unpackedconformantarrayschema
-
-  Packedconformantarrayschema.PackedArray = 
-    <packed array [<Boundspecification>] of <Typeidentifier>>
-
-  Unpackedconformantarrayschema.UnpackedArray =
+  UnpackedConformantArraySchema.UnpackedArray =
     <array [<{Boundspecification ";"}+>] of <ArrayType>>
     
-  ArrayType = Typeidentifier 
-  ArrayType = Conformantarrayschema
+  ArrayType = TypeIdentifier 
+  ArrayType = ConformantArraySchema
 
   Boundspecification.BoundSpec =
     <<Identifier> .. <Identifier> : <Ordinaltypeidentifier>>
 
-  Ordinaltypeidentifier = Typeidentifier
+  Ordinaltypeidentifier = TypeIdentifier
 
 context-free syntax // Statements
 
@@ -307,7 +311,7 @@ context-free syntax
     <<Variable> [<{Expression ","}*>]>
     
   Fielddesignator.FieldAccess =
-    <<Variable>.<Fieldidentifier>>
+    <<Variable>.<FieldIdentifier>>
   
   Set.Set = <[<{Expression ","}*>]>
 
@@ -322,7 +326,7 @@ context-free syntax // Types
   Type = Simpletype 
   Type = Structuredtype 
   Type = Pointertype 
-  Type = Typeidentifier
+  Type = TypeIdentifier
 
   Simpletype = Subrangetype 
   Simpletype = Enumeratedtype
@@ -367,7 +371,7 @@ context-free syntax // Types
   Filecomponenttype = Type
 
   Pointertype.PointerType = 
-    <^ <Typeidentifier>>
+    <^ <TypeIdentifier>>
 
 context-free syntax // Record Fields
 
@@ -377,7 +381,7 @@ context-free syntax // Record Fields
     <<{Identifier ","}+> : <Type>;>
 
   Variantpart.Variant = <
-    case <Tagfield?> <Typeidentifier> of 
+    case <Tagfield?> <TypeIdentifier> of 
       <{Variant ";"}+>;
   >
 
@@ -415,10 +419,10 @@ context-free syntax
 //  Actualvariable      = Variable
 //  Arrayvariable       = Variable
   
-  Typeidentifier.TypeId      = Identifier
+  TypeIdentifier.TypeId = Identifier
   
-  Fieldidentifier.FieldId     = Identifier
-  Constantidentifier.ConstantId  = Identifier
+  FieldIdentifier.FieldId     = Identifier
+  ConstantIdentifier.ConstantId  = Identifier
   
   Variableidentifier.VarId  = Identifier
   
@@ -431,7 +435,7 @@ context-free syntax // Low Level Definitions
  
   Label.Label = Integernumber
   
-  Constant.ConstId     = Sign? Constantidentifier 
+  Constant.ConstId     = Sign? ConstantIdentifier 
   Constant.ConstNum    = Number
   Constant.ConstString = String
    
