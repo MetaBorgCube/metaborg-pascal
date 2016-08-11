@@ -1,17 +1,79 @@
 module static-semantics
 
-imports
-
-  signatures/-
+imports signatures/-
 
 rules
 
   init ^ (s) := new s.
 
+rules
+
   [[ Program(h, b) ^ (s) ]] :=
     [[ b ^ (s) ]].
     
-  [[ Block(_, _) ^ (s) ]] := true.
-    
-// false | note "Specify name binding and typing rules in static-semantics.nabl2".
+  [[ Block(lds, cds, tds, vds, pfds, stms) ^ (s) ]] := 
+     [[lds ^ (s)]],
+     [[cds ^ (s)]],
+     [[tds ^ (s)]],
+     [[vds ^ (s)]],
+     Map[[pfds ^ (s)]],
+     [[stms ^ (s)]].
+     
+  [[ NoLabelDecls() ^ (s) ]] := true.  
+  [[ LabelDecls(_)  ^ (s) ]] := true.
+  
+  [[ NoConstDefs()  ^ (s) ]] := true.  
+  [[ ConstDefs(cds) ^ (s) ]] := Map[[ cds ^ (s) ]].  
+  [[ ConstDef(x, c) ^ (s) ]] := {x} <- s.
+  // todo : c may also be a reference to previous constant
+     
+  [[ NoTypeDefs()  ^ (s) ]] := true. 
+  [[ TypeDefs(tds) ^ (s) ]] := Map[[ tds ^ (s) ]].
+  [[ TypeDef(x, t) ^ (s) ]] := {x} <- s, [[ t ^ (s) ]].
+  
+  [[ NoVarDecls()   ^ (s) ]] := true.
+  [[ VarDecls(vds)  ^ (s) ]] := Map[[ vds ^ (s) ]].
+  [[ VarDecl(xs, t) ^ (s) ]] := MapT[[ xs ^ (s) : ty ]], [[ t ^ (s) : ty]].
+  
+  // note: this does not properly implement declaration before use
+  
+  [[ ProcDecl(ph, b) ^ (s) ]] := [[ ph ^ (s) ]], [[ b ^ (s) ]].
+  [[ ProcDirective(_, _) ^ (s) ]] := false | error "not implemented".
+  [[ ProcId(_, _) ^ (s) ]] := false | error "not implemented".
+ 
+  [[ FuncDecl(ph, b) ^ (s) ]] := [[ ph ^ (s) ]], [[ b ^ (s) ]].
+  [[ FuncDirective(_, _) ^ (s) ]] := false | error "not implemented".
+  [[ FuncId(_, _) ^ (s) ]] := false | error "not implemented". 
+  
+  [[ Statements(stms) ^ (s) ]] := Map[[ stms ^ (s) ]].
+  
+rules // procedure and function definitions
 
+  [[ ProcHeading(f, params) ^ (s) ]] := 
+     new s', s' -P-> s, 
+     [[ params ^ (s') : tys]],
+     Proc{f} <- s, Proc{f} : Proc(tys).
+     
+  [[ FuncHeading(f, params, t) ^ (s) ]] := 
+     new s', s' -P-> s, 
+     [[ params ^ (s') : tys]], // parameter declarations and types
+     Func{f} <- s, Func{f} : Func(tys, ty), 
+     [[ t ^ (s) : ty ]], Var{f} <- s', Var{f} : ty. // return type
+         
+  [[ NoParams() ^ (s) : [] ]] := true. 
+  [[ Params(params) ^ (s) : tys ]] := MapTs[[ params ^ (s) : tys]].
+  
+  [[ ValueParams(xs, t) ^ (s) : tys ]] := 
+     Map
+  
+rules
+
+   Map[[ [] ^ (s) ]] := true.   
+   Map[[ [ x | xs ] ^ (s) ]] := [[ x ^ (s) ]], Map[[ xs ^ (s) ]].
+   
+   MapT[[ [] ^ (s) : ty ]] := true.   
+   MapT[[ [ x | xs ] ^ (s) : ty ]] := [[ x ^ (s) : ty ]], MapT[[ xs ^ (s) : ty ]].
+   
+   MapTs[[ [] ^ (s) : [] ]] := true.   
+   MapTs[[ [ x | xs ] ^ (s) : [ty | tys] ]] := [[ x ^ (s) : ty ]], MapTs[[ xs ^ (s) : tys ]].
+   
