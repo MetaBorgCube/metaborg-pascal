@@ -1,7 +1,5 @@
 module Pascal
 
-imports Common
-
 context-free start-symbols Program
 
 context-free syntax // Programs and Blocks
@@ -94,10 +92,10 @@ context-free syntax // Procedure and Function Definitions
   Resulttype = Typeidentifier
 
   Procedureidentification.ProcId =
-    <procedure <Procedureidentifier>>
+    <procedure <Identifier>>
 
   Functionidentification.FuncId =
-    <function <Functionidentifier>>
+    <function <Identifier>>
 
   Formalparameterlist.Params =
     <(<{Formalparametersection ";"}+>)>
@@ -139,7 +137,11 @@ context-free syntax // Procedure and Function Definitions
 
 context-free syntax // Statements
 
-  //Statementsequence = {Statement ";"}+
+  //Statementsequence.Seq = <<{Statement ";"}+>>
+  
+  //Statement.NoOp = <> 
+  // to model optional ; at end of statement sequence
+  // not clear that the standard includes that
   
   Statement.Labeled =
     <<Label> : <Stat>>
@@ -154,10 +156,10 @@ context-free syntax // Statements
   Simplestatement = Gotostatement 
 
   Assignmentstatement.Assign =
-    <<Identifier> := <Expression>>
+    <<Variable> := <Expression>>
 
-  LValue = Variable 
-  LValue = Functionidentifier
+//  LValue = Variable 
+//  LValue = Functionidentifier
 
   Procedurestatement.ProcCall =
     <<Identifier> <Actualparameterlist>>
@@ -228,22 +230,21 @@ context-free syntax // Statements
 //  Caselabellist = {Constant ","}+
 
   Withstatement.With = <
-    with <{Recordvariable ","}+> do
+    with <{Variable ","}+> do
       <Statement>
   >
   
   Actualparameterlist.Params = <
-    (<{Actualparameter ","}*>)
+    (<{Expression ","}*>)
   >
   
-  Actualparameter = Actualvalue 
-  Actualparameter = Actualvariable 
-  Actualparameter = Actualprocedure 
-  Actualparameter = Actualfunction
- 
-  Actualvalue     = Expression
-  Actualprocedure = Procedureidentifier
-  Actualfunction  = Functionidentifier
+//  Actualparameter = Actualvalue 
+//  Actualparameter = Actualvariable 
+//  Actualparameter = Actualprocedure 
+//  Actualparameter = Actualfunction
+//  Actualvalue     = Expression
+//  Actualprocedure = Procedureidentifier
+//  Actualfunction  = Functionidentifier
 
 context-free syntax // Expressions
   
@@ -261,13 +262,13 @@ context-free priorities
   
 context-free syntax
 
-  Expression.Var = Variable
+  Expression = Variable
   Expression = Number
   Expression = String
   Expression = Set
   Expression.NilE = <nil>
-  Expression = Constantidentifier
-  Expression = Boundidentifier
+//  Expression = Constantidentifier
+//  Expression = Boundidentifier
   Expression = Functiondesignator
   Expression = <(<Expression>)> {bracket}
   Expression.Not = <not <Expression>>
@@ -290,30 +291,31 @@ context-free syntax
   Multiplicationoperator.MOD = <mod>
   Multiplicationoperator.AND = <and>
 
-  Variable = Entirevariable 
+  Variable.Ref = Identifier
+//  Variable = Entirevariable 
   Variable = Componentvariable 
   Variable = Referencedvariable
   
-  Entirevariable = Variableidentifier
-  Entirevariable = Fieldidentifier
+//  Entirevariable = Variableidentifier
+//  Entirevariable = Fieldidentifier
 
   Componentvariable = Indexedvariable 
   Componentvariable = Fielddesignator
   Componentvariable = Filebuffer
 
   Indexedvariable.IndexVar = 
-    <<Arrayvariable> [<{Expression ","}*>]>
+    <<Variable> [<{Expression ","}*>]>
     
   Fielddesignator.FieldAccess =
-    <<Recordvariable>.<Fieldidentifier>>
+    <<Variable>.<Fieldidentifier>>
   
   Set.Set = <[<{Expression ","}*>]>
 
   Functiondesignator.FunCall = 
-    <<Functionidentifier><Actualparameterlist?>>
+    <<Identifier><Actualparameterlist>>
     
   Filebuffer.FileVar = 
-    <<Filevariable>^>
+    <<Variable>^>
 
 context-free syntax // Types
 
@@ -405,29 +407,33 @@ lexical restrictions
   
 context-free syntax
 
-  Referencedvariable.RefVar  = <<Pointervariable>^>
+  Referencedvariable.RefVar  = <<Variable>^>
   
-  Filevariable        = Variable
-  Recordvariable      = Variable
-  Pointervariable     = Variable
-  Actualvariable      = Variable
-  Arrayvariable       = Variable
+//  Filevariable        = Variable
+//  Recordvariable      = Variable
+//  Pointervariable     = Variable
+//  Actualvariable      = Variable
+//  Arrayvariable       = Variable
   
-  Fieldidentifier     = Identifier
-  Constantidentifier  = Identifier
-  Variableidentifier  = Identifier
-  Typeidentifier      = Identifier
-  Procedureidentifier = Identifier
-  Functionidentifier  = Identifier
-  Boundidentifier     = Identifier
+  Typeidentifier.TypeId      = Identifier
+  
+  Fieldidentifier.FieldId     = Identifier
+  Constantidentifier.ConstantId  = Identifier
+  
+  Variableidentifier.VarId  = Identifier
+  
+//  Procedureidentifier.ProcId = Identifier
+//  Functionidentifier.FuncId  = Identifier
+  
+  Boundidentifier.BoundId     = Identifier
 
 context-free syntax // Low Level Definitions
  
-  Label = Integernumber
+  Label.Label = Integernumber
   
-  Constant.ConstId = Sign? Constantidentifier 
-  Constant         = Number
-  Constant.String  = String
+  Constant.ConstId     = Sign? Constantidentifier 
+  Constant.ConstNum    = Number
+  Constant.ConstString = String
    
   Number.Int  = Integernumber 
   Number.Real = Realnumber
@@ -435,17 +441,35 @@ context-free syntax // Low Level Definitions
   Sign.Pos = <+>
   Sign.Neg = <->
   
-lexical syntax
+lexical syntax // Numbers
   
   Integernumber = Digitsequence
   Realnumber    = Digitsequence "." Digitsequence? Scalefactor?
   Realnumber    = Digitsequence Scalefactor
-  Scalefactor   = [Ee] Sign? Digitsequence
+  Scalefactor   = [Ee] [\+\-]? Digitsequence
 
   Unsigneddigitsequence = [0-9]+
-  Digitsequence = Sign? Unsigneddigitsequence
-  Sign = [\+\-]
+  Digitsequence = [\+\-]? Unsigneddigitsequence
+
+lexical restrictions
+
+  Integernumber -/- [0-9]
+  Realnumber -/- [0-9]
+  
+lexical syntax // Strings
 
   String = "'" Stringcharacter+  "'"
   Stringcharacter = ~[\'] 
   Stringcharacter = "''"
+
+lexical syntax // layout
+  
+  LAYOUT         = [\ \t\n\r] // whitespace
+  LAYOUT         = Comment
+  Comment        = "{" InsideComment* "}" 
+  InsideComment  = ~[\}] 
+  InsideComment  = Comment // nested comment, not in standard
+
+context-free restrictions
+
+  LAYOUT? -/- [\ \t\n\r\{]
