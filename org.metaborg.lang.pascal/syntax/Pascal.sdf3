@@ -10,7 +10,7 @@ context-free syntax // Programs and Blocks
   >
 
   Programheading.ProgramHeading = 
-    <program <Identifier> (<{Identifier ","}*>) ;>
+    <program <Identifier> (<{Identifier ","}*>) ;> {case-insensitive}
 
   Block.Block = <
     <LabelDeclarations>
@@ -25,13 +25,13 @@ context-free syntax // Programs and Blocks
 
   LabelDeclarations.LabelDecls =
     <label 
-       <{Label ","}*>;>
+       <{Label ","}*>;> {case-insensitive}
 
   ConstantDefinitions.NoConstDefs = <>
   
   ConstantDefinitions.ConstDefs =
     <const 
-       <{ConstantDefinition "\n"}*>>
+       <{ConstantDefinition "\n"}*>> {case-insensitive}
 
   ConstantDefinition.ConstDef =
     <<Identifier> = <Constant>;>
@@ -40,7 +40,7 @@ context-free syntax // Programs and Blocks
   
   TypeDefinitions.TypeDefs =
     <type 
-       <{TypeDefinition "\n"}*>>
+       <{TypeDefinition "\n"}*>> {case-insensitive}
 
   TypeDefinition.TypeDef =
     <<Identifier> = <Type>;>
@@ -49,10 +49,12 @@ context-free syntax // Programs and Blocks
   
   VariableDeclarations.VarDecls =
     <var 
-       <{VariableDeclaration "\n"}*>>
+       <{VariableDeclaration "\n"}*>> {case-insensitive}
 
   VariableDeclaration.VarDecl =
-    <<{Identifier ","}*> : <Type>;>
+    <<{VariableIdentifier ","}*> : <Type>;>
+    
+  VariableIdentifier.VarId = <<Identifier>>
 
 context-free syntax // procedure and function declarations
 
@@ -80,32 +82,32 @@ context-free syntax // procedure and function declarations
     <<FunctionIdentification>;
      <Block>;>
 
-  Directive.Forward = <forward>
+  Directive.Forward = <forward> {case-insensitive}
   // Directive = Compilerdefineddirectives
   
   Statements.Statements = <
     begin  
-      <{Statement ";"}+>
+      <{Statement ";"}*>
     end
-  >
+  > {case-insensitive} 
 
 context-free syntax // Procedure and Function Definitions
 
   ProcedureHeading.ProcHeading =
-    <procedure <Identifier> <FormalParameters>>
+    <procedure <Identifier> <FormalParameters>> {case-insensitive}
     
   FunctionHeading.FuncHeading =
-    <function <Identifier> <FormalParameters> : <ResultType>>
+    <function <Identifier> <FormalParameters> : <ResultType>> {case-insensitive}
 
   ResultType = TypeIdentifier
 
   ProcedureIdentification.ProcId =
-    <procedure <Identifier>>
+    <procedure <Identifier>> {case-insensitive}
 
   FunctionIdentification.FuncId =
-    <function <Identifier>>
+    <function <Identifier>> {case-insensitive}
 
-  FormalParameters.NoParams = <>
+//  FormalParameters.NoParams = <>
   
   FormalParameters.Params =
     <(<{FormalParameter ";"}+>)>
@@ -114,7 +116,7 @@ context-free syntax // Procedure and Function Definitions
     <<{Identifier ","}+> : <ParameterType>>
 
   FormalParameter.VarParams =
-    <var <{Identifier ","}+> : <ParameterType>>
+    <var <{Identifier ","}+> : <ParameterType>> {case-insensitive}
 
   FormalParameter = ProcedureHeading
   FormalParameter = FunctionHeading
@@ -122,141 +124,127 @@ context-free syntax // Procedure and Function Definitions
   ParameterType = TypeIdentifier 
   ParameterType = ConformantArraySchema
 
-  ConformantArraySchema = PackedConformantArraySchema 
-  ConformantArraySchema = UnpackedConformantArraySchema
+  ConformantArraySchema.PackedArraySchema = 
+    <packed array [<BoundSpecification>] of <TypeIdentifier>> {case-insensitive}
 
-  PackedConformantArraySchema.PackedArray = 
-    <packed array [<Boundspecification>] of <TypeIdentifier>>
-
-  UnpackedConformantArraySchema.UnpackedArray =
-    <array [<{Boundspecification ";"}+>] of <ArrayType>>
+  ConformantArraySchema.UnpackedArraySchema =
+    <array [<{BoundSpecification ";"}+>] of <ArrayType>> {case-insensitive}
     
   ArrayType = TypeIdentifier 
   ArrayType = ConformantArraySchema
 
-  Boundspecification.BoundSpec =
-    <<Identifier> .. <Identifier> : <Ordinaltypeidentifier>>
-
-  Ordinaltypeidentifier = TypeIdentifier
+  BoundSpecification.BoundSpec =
+    <<Identifier> .. <Identifier> : <TypeIdentifier>>
 
 context-free syntax // Statements
-
-  //Statementsequence.Seq = <<{Statement ";"}+>>
-  
-  //Statement.NoOp = <> 
-  // to model optional ; at end of statement sequence
-  // not clear that the standard includes that
-  
+ 
   Statement.Labeled =
-    <<Label> : <Stat>>
+    <<Label> : <Statement>>
+    // should probably not be another labeled statement
     
-  Statement = Stat
-    
-  Stat = Simplestatement 
-  Stat = Structuredstatement
-      
-  Simplestatement = Assignmentstatement 
-  Simplestatement = Procedurestatement  
-  Simplestatement = Gotostatement 
+  Statement.Term =
+    <<Statement>;>
 
-  Assignmentstatement.Assign =
+  Statement.Assign =
     <<Variable> := <Expression>>
 
-//  LValue = Variable 
-//  LValue = Functionidentifier
-
-  Procedurestatement.ProcCall =
-    <<Identifier> <Actualparameterlist>>
+  Statement.ProcCall =
+    <<Identifier><ActualParameters>>
     
-  Gotostatement.Goto =
-    <goto <Label>>
-    
-  Structuredstatement = Compoundstatement 
-  Structuredstatement = Repetitivestatement 
-  Structuredstatement = Conditionalstatement 
-  Structuredstatement = Withstatement
+  Statement.Goto =
+    <goto <Label>> {case-insensitive}
   
-  Compoundstatement.Compound = <
+  Statement.Compound = <
     begin 
       <{Statement ";"}+> 
     end
-  >
+  > {case-insensitive}
   
-  Repetitivestatement = Whilestatement 
-  Repetitivestatement = Repeatstatement 
-  Repetitivestatement = Forstatement
-  
-  Whilestatement.While = <
+  Statement.While = <
     while <Expression> do 
       <Statement>
-  >
+  > {case-insensitive}
   
-  Repeatstatement.Repeat = <
+  Statement.Repeat = <
     repeat 
       <{Statement ";"}+> 
     until <Expression>
-  >
+  > {case-insensitive}
   
-  Forstatement.For = <
-    for <Variableidentifier> := <Initialexpression> <UpDown> <Finalexpression> do 
+  Statement.For = <
+    for <Identifier> := <Expression> <UpDown> <Expression> do 
       <Statement>
-  >
+  > {case-insensitive}
   
-  UpDown.Up = <to>
-  UpDown.Down = <downto>
-  
-  Initialexpression = Expression
-  Finalexpression = Expression
+  UpDown.Up = <to> {case-insensitive}
+  UpDown.Down = <downto> {case-insensitive}
 
-  Conditionalstatement = Ifstatement 
-  Conditionalstatement = Casestatement
-
-  Ifstatement.If = <
+  Statement.If = <
     if <Expression> then 
       <Statement>
-  >
-  Ifstatement.IfElse = <
+  > {case-insensitive}
+  
+  Statement.IfElse = <
     if <Expression> then 
       <Statement>
     else 
       <Statement>
-  >
+  > {case-insensitive}
   
-  Casestatement.Case = <
+  Statement.Case = <
     case <Expression> of
-      <Caselimb+>
+      <CaseLimb+>
     end
-  >
+  > {case-insensitive}
   
-  Caselimb.CaseLimb = 
+  CaseLimb.CaseLimb = 
     <<{Constant ","}+> : <Statement>;>
 
-//  Caselabellist = {Constant ","}+
-
-  Withstatement.With = <
+  Statement.With = <
     with <{Variable ","}+> do
       <Statement>
-  >
+  > {case-insensitive}
   
-  Actualparameterlist.Params = <
-    (<{Expression ","}*>)
-  >
+context-free syntax // parameters
+
+  //ActualParameters.NoParams = <>
   
-//  Actualparameter = Actualvalue 
-//  Actualparameter = Actualvariable 
-//  Actualparameter = Actualprocedure 
-//  Actualparameter = Actualfunction
-//  Actualvalue     = Expression
-//  Actualprocedure = Procedureidentifier
-//  Actualfunction  = Functionidentifier
+  ActualParameters.Params = <(<{Expression ","}*>)>
 
 context-free syntax // Expressions
   
+  Expression        = <(<Expression>)> {bracket}  
+  Expression        = Variable
+  Expression        = Number
+  Expression.String = String
+  Expression.NilE   = <nil> {case-insensitive}
+  Expression.Not    = <not <Expression>> {case-insensitive}
+  Expression.Set    = <[<{Expression ","}*>]>
+      
   Expression.Sign  = <<Sign> <Expression>>
-  Expression.RelOp = <<Expression> <Relationaloperator> <Expression>>  
-  Expression.AddOp = <<Expression> <Additionoperator> <Expression>>
+  Expression.RelOp = <<Expression> <RelationalOperator>     <Expression>>  {left} // ?
+  Expression.AddOp = <<Expression> <AdditionOperator>       <Expression>>  {left} // ?
+  Expression.MulOp = <<Expression> <MultiplicationOperator> <Expression>>  {left} // ?
+ 
+context-free syntax // operators
+
+  RelationalOperator.Eq       = [=] 
+  RelationalOperator.NEQ      = [<>] 
+  RelationalOperator.LT       = [<]
+  RelationalOperator.LEQ      = [<=] 
+  RelationalOperator.GT       = [>]
+  RelationalOperator.GEQ      = [>=] 
+  RelationalOperator.IN       = <in> 
   
-  Expression.MulOp = <<Expression> <Multiplicationoperator> <Expression>>
+  AdditionOperator.ADD        = <+>
+  AdditionOperator.MIN        = <-> 
+  AdditionOperator.OR         = <or>
+  
+  MultiplicationOperator.MUL  = <*>
+  MultiplicationOperator.DIV  = </>
+  MultiplicationOperator.IDIV = <div>
+  MultiplicationOperator.MOD  = <mod>
+  MultiplicationOperator.AND  = <and>
   
 context-free priorities
 
@@ -264,131 +252,86 @@ context-free priorities
   
   Expression.Not > Expression.RelOp
   
-context-free syntax
-
-  Expression = Variable
-  Expression = Number
-  Expression = String
-  Expression = Set
-  Expression.NilE = <nil>
-//  Expression = Constantidentifier
-//  Expression = Boundidentifier
-  Expression = Functiondesignator
-  Expression = <(<Expression>)> {bracket}
-  Expression.Not = <not <Expression>>
-
-  Relationaloperator.Eq  = [=] 
-  Relationaloperator.NEQ = [<>] 
-  Relationaloperator.LT  = [<]
-  Relationaloperator.LEQ = [<=] 
-  Relationaloperator.GT  = [>]
-  Relationaloperator.GEQ = [>=] 
-  Relationaloperator.IN  = <in>
-  
-  Additionoperator.ADD = <+>
-  Additionoperator.MIN = <-> 
-  Additionoperator.OR = <or>
-
-  Multiplicationoperator.MUL = <*>
-  Multiplicationoperator.DIV = </>
-  Multiplicationoperator.IDIV = <div>
-  Multiplicationoperator.MOD = <mod>
-  Multiplicationoperator.AND = <and>
+context-free syntax // variables
 
   Variable.Ref = Identifier
-//  Variable = Entirevariable 
-  Variable = Componentvariable 
-  Variable = Referencedvariable
-  
-//  Entirevariable = Variableidentifier
-//  Entirevariable = Fieldidentifier
 
-  Componentvariable = Indexedvariable 
-  Componentvariable = Fielddesignator
-  Componentvariable = Filebuffer
-
-  Indexedvariable.IndexVar = 
+  Variable.IndexVar = 
     <<Variable> [<{Expression ","}*>]>
     
-  Fielddesignator.FieldAccess =
-    <<Variable>.<FieldIdentifier>>
-  
-  Set.Set = <[<{Expression ","}*>]>
+  Variable.FieldDes = 
+    <<Variable>.<Identifier>>
 
-  Functiondesignator.FunCall = 
-    <<Identifier><Actualparameterlist>>
-    
-  Filebuffer.FileVar = 
+  Variable.FileVar = 
     <<Variable>^>
 
+  Variable.RefVar = 
+    <<Variable>^>
+
+  Expression.FunCall = 
+    <<Identifier><ActualParameters>>
+   
 context-free syntax // Types
 
-  Type = Simpletype 
-  Type = Structuredtype 
-  Type = Pointertype 
+  Type = SimpleType 
   Type = TypeIdentifier
-
-  Simpletype = Subrangetype 
-  Simpletype = Enumeratedtype
+   
+  TypeIdentifier.TypeId = Identifier
   
-  Enumeratedtype.EnumType = <(<{Identifier ","}+>)>
+  SimpleType.EnumType = 
+    <(<{Identifier ","}+>)>
   
-  Subrangetype.SubrangeType =
-    <<Lowerbound> .. <Upperbound>>
-    
-  Lowerbound = Constant
-  Upperbound = Constant
+  SimpleType.SubrangeType =
+    <<Constant> .. <Constant>>
 
-  Structuredtype = Unpackedstructuredtype
-  Structuredtype.Packed = 
-    <packed <Unpackedstructuredtype>>
+  Type = 
+    UnpackedStructuredType
     
-  Unpackedstructuredtype = Arraytype 
-  Unpackedstructuredtype = Recordtype 
-  Unpackedstructuredtype = Settype 
-  Unpackedstructuredtype = Filetype
+  Type.Packed = 
+    <packed <UnpackedStructuredType>> {case-insensitive}
   
-  Arraytype.ArrayType = 
-    <array [<{Indextype ","}+>] of <Elementtype>>
+  UnpackedStructuredType.ArrayType = 
+    <array [<{SimpleType ","}+>] of <Type>> {case-insensitive}
     
-  Indextype = Simpletype
-  Elementtype = Type
+  UnpackedStructuredType.SetType = 
+    <set of <Type>> {case-insensitive}
 
-  Recordtype.RecordType = <
-    record  
-      <Fieldlist>
-    end
-  >
+  UnpackedStructuredType.FileType = 
+    <file of <Type>> {case-insensitive}
 
-  Settype.SetType = 
-    <set of <Basetype>>
-    
-  Basetype = Type
-
-  Filetype.FileType = 
-    <file of <Filecomponenttype>>
-    
-  Filecomponenttype = Type
-
-  Pointertype.PointerType = 
+  Type.PointerType = 
     <^ <TypeIdentifier>>
 
 context-free syntax // Record Fields
 
-  Fieldlist.Fields = <<Recordsection*> <Variantpart>>
+  UnpackedStructuredType.RecordType = <
+    record  
+      <FieldList>
+    end
+  > {case-insensitive}
+  
+  FieldList.FieldList = <
+    <{RecordSection "\n"}*> 
+    <Variants>
+  >
+  
+  FieldList.FieldList = 
+    <<{RecordSection "\n"}*>>
 
-  Recordsection.Fields =
-    <<{Identifier ","}+> : <Type>;>
+  RecordSection.RecordSection =
+    <<{FieldIdentifier ","}+> : <Type>;>
 
-  Variantpart.Variant = <
+  FieldIdentifier.FieldId = Identifier
+  
+  Variants.Variant = <
     case <Tagfield?> <TypeIdentifier> of 
       <{Variant ";"}+>;
-  >
+  > {case-insensitive}
 
   Tagfield.Tag = <<Identifier> :>
 
   Variant.Variant = 
-    <<{Constant ","}+> : (<Fieldlist>)>
+    <<{Constant ","}+> : (<FieldList>)>
 
 context-free syntax // Input/Output
 
@@ -398,46 +341,44 @@ context-free syntax // Input/Output
 //  Outputvalue = <<Expression> ; <Fieldwidth>>
 //  Outputvalue = Expression
   
-  Fieldwidth = Expression
-  Fractionlength = Expression
+//  Fieldwidth = Expression
+//  Fractionlength = Expression
 
 lexical syntax // Variable and Identifier Categories
 
-  Identifier = [a-zA-Z][a-zA-Z0-9]*
+  Identifier = [a-zA-Z][a-zA-Z0-9\_]*
   
 lexical restrictions
 
-  Identifier -/- [a-zA-Z0-9]
-  
+  Identifier -/- [a-zA-Z0-9\_]
+
 context-free syntax
 
-  Referencedvariable.RefVar  = <<Variable>^>
+  Identifier = <program> {reject,case-insensitive}
+  Identifier = <var> {reject,case-insensitive}
+  Identifier = <type> {reject,case-insensitive}
+  Identifier = <const> {reject,case-insensitive}
+  Identifier = <function> {reject,case-insensitive}
+  Identifier = <procedure> {reject,case-insensitive}
+  Identifier = <begin> {reject,case-insensitive}
+  Identifier = <end> {reject,case-insensitive}
+  Identifier = <if> {reject,case-insensitive}
+  Identifier = <then> {reject,case-insensitive}
+  Identifier = <else> {reject,case-insensitive}
+  Identifier = <case> {reject,case-insensitive}
+  Identifier = <of> {reject,case-insensitive}
   
-//  Filevariable        = Variable
-//  Recordvariable      = Variable
-//  Pointervariable     = Variable
-//  Actualvariable      = Variable
-//  Arrayvariable       = Variable
+context-free syntax
   
-  TypeIdentifier.TypeId = Identifier
-  
-  FieldIdentifier.FieldId     = Identifier
-  ConstantIdentifier.ConstantId  = Identifier
-  
-  Variableidentifier.VarId  = Identifier
-  
-//  Procedureidentifier.ProcId = Identifier
-//  Functionidentifier.FuncId  = Identifier
-  
-  Boundidentifier.BoundId     = Identifier
+  BoundIdentifier.BoundId     = Identifier
 
 context-free syntax // Low Level Definitions
  
   Label.Label = Integernumber
   
-  Constant.ConstId     = Sign? ConstantIdentifier 
-  Constant.ConstNum    = Number
-  Constant.ConstString = String
+  Constant.ConstId = Sign? Identifier 
+  Constant         = Number
+  Constant         = String
    
   Number.Int  = Integernumber 
   Number.Real = Realnumber
@@ -468,12 +409,23 @@ lexical syntax // Strings
 
 lexical syntax // layout
   
-  LAYOUT         = [\ \t\n\r] // whitespace
-  LAYOUT         = Comment
-  Comment        = "{" InsideComment* "}" 
-  InsideComment  = ~[\}] 
-  InsideComment  = Comment // nested comment, not in standard
+  LAYOUT           = [\ \t\n\r] // whitespace
+  
+  LAYOUT           = Comment
+  
+  Comment          = "{" InsideComment* "}" 
+  InsideComment    = ~[\}] 
+  InsideComment    = Comment // nested comment, not in standard
+  
+  Comment          = "(*" InsideParComment* "*)" 
+  InsideParComment = ~[\*]
+  InsideParComment = Asterisk
+  Asterisk         = "*"
 
+lexical restrictions
+
+  Asterisk -/- [\)]
+  
 context-free restrictions
 
   LAYOUT? -/- [\ \t\n\r\{]
