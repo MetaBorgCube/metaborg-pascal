@@ -1,6 +1,54 @@
 module static-semantics
 
-imports signatures/-
+imports 
+  signatures/- 
+  completion
+  pp
+  outline
+  analysis
+  
+imports
+
+  signatures/nabl2/shared/common/-
+  signatures/nabl2/shared/constraints/-
+
+  pp/nabl2/shared/common/-
+  pp/nabl2/shared/constraints/-
+
+  nabl2/shared/-
+  
+imports
+
+  nabl2/runtime/analysis/-
+  nabl2/runtime/common/-
+  nabl2/runtime/editor/-
+  nabl2/runtime/solver/-
+  nabl2/runtime/stdlib/-
+  nabl2/runtime/pp
+  
+signature 
+
+  types
+     IntT() 
+     RealT() 
+     BoolT()
+     StringT()
+     FunT(List(type), type) 
+     ProcT(List(type))
+     ArrayT(type)
+     ArrayT(List(type), type)
+     PointerT(type)
+     FileT(type)
+     SetT(type)
+     RecordT(scope)
+     SubrangeT(Constant, Constant)
+     EnumT(scope)
+     
+     TNil()
+     TCons(type, type)
+     
+     Type(occurrence)
+     NilT()
 
 rules
 
@@ -20,60 +68,253 @@ rules
      [[stms ^ (s)]].
      
   [[ NoLabelDecls() ^ (s) ]] := true.  
-  [[ LabelDecls(_)  ^ (s) ]] := true.
+  [[ LabelDecls(_)  ^ (s) ]] := false | note "label declarations not implemented".
   
   [[ NoConstDefs()  ^ (s) ]] := true.  
   [[ ConstDefs(cds) ^ (s) ]] := Map[[ cds ^ (s) ]].  
-  [[ ConstDef(x, c) ^ (s) ]] := {x} <- s.
+  [[ ConstDef(x, c) ^ (s) ]] := Const{x} <- s, [[ c ^ (s) : ty ]], Const{x} : ty.
   // todo : c may also be a reference to previous constant
      
   [[ NoTypeDefs()  ^ (s) ]] := true. 
   [[ TypeDefs(tds) ^ (s) ]] := Map[[ tds ^ (s) ]].
-  [[ TypeDef(x, t) ^ (s) ]] := {x} <- s, [[ t ^ (s) ]].
+  [[ TypeDef(x, t) ^ (s) ]] := Type{x} <- s, [[ t ^ (s) : ty ]], Type{x} : ty.
   
   [[ NoVarDecls()   ^ (s) ]] := true.
   [[ VarDecls(vds)  ^ (s) ]] := Map[[ vds ^ (s) ]].
-  [[ VarDecl(xs, t) ^ (s) ]] := MapT[[ xs ^ (s) : ty ]], [[ t ^ (s) : ty]].
-  
+  [[ VarDecl(xs, t) ^ (s) ]] := [[ t ^ (s) : ty]], MapT[[ xs ^ (s) : ty ]].
+  [[ VarId(x) ^ (s) : ty ]] := Var{x} <- s, Var{x} : ty.
+ 
+ 
   // note: this does not properly implement declaration before use
   
-  [[ ProcDecl(ph, b) ^ (s) ]] := [[ ph ^ (s) ]], [[ b ^ (s) ]].
-  [[ ProcDirective(_, _) ^ (s) ]] := false | error "not implemented".
-  [[ ProcId(_, _) ^ (s) ]] := false | error "not implemented".
+  [[ ProcDecl(ph, b) ^ (s) ]] := 
+     new s', s' -P-> s, 
+     [[ ph ^ (s, s') ]], [[ b ^ (s') ]].
+  
+  [[ ProcDirective(_, _) ^ (s) ]] := false | error "ProcDirective not implemented".
+  [[ ProcId(_, _) ^ (s) ]] := false | error "ProcId not implemented".
  
-  [[ FuncDecl(ph, b) ^ (s) ]] := [[ ph ^ (s) ]], [[ b ^ (s) ]].
-  [[ FuncDirective(_, _) ^ (s) ]] := false | error "not implemented".
-  [[ FuncId(_, _) ^ (s) ]] := false | error "not implemented". 
+  [[ FuncDecl(ph, b) ^ (s) ]] := 
+    new s', s' -P-> s, 
+    [[ ph ^ (s, s') ]], [[ b ^ (s') ]].
+  
+  [[ FuncDirective(_, _) ^ (s) ]] := false | error "FuncDirectivenot implemented".
+  [[ FuncId(_, _) ^ (s) ]] := false | error "FuncId not implemented". 
   
   [[ Statements(stms) ^ (s) ]] := Map[[ stms ^ (s) ]].
   
 rules // procedure and function definitions
 
-  [[ ProcHeading(f, params) ^ (s) ]] := 
-     new s', s' -P-> s, 
-     [[ params ^ (s') : tys]],
-     Proc{f} <- s, Proc{f} : Proc(tys).
+  [[ ProcHeading(f, params) ^ (s_par, s) ]] := 
+     [[ params ^ (s) : tys]],
+     Proc{f} <- s_par, Proc{f} : ProcT(tys).
      
-  [[ FuncHeading(f, params, t) ^ (s) ]] := 
-     new s', s' -P-> s, 
-     [[ params ^ (s') : tys]], // parameter declarations and types
-     Func{f} <- s, Func{f} : Func(tys, ty), 
-     [[ t ^ (s) : ty ]], Var{f} <- s', Var{f} : ty. // return type
-         
-  [[ NoParams() ^ (s) : [] ]] := true. 
+  [[ FuncHeading(f, params, t) ^ (s_par, s) ]] := 
+     [[ params ^ (s) : tys]], 
+     Func{f} <- s_par, Func{f} : FunT(tys, ty), 
+     [[ t ^ (s) : ty ]], Var{f} <- s, Var{f} : ty. // return variable and type
+
+  //[[ NoParams() ^ (s) : TNil() ]] := true. 
   [[ Params(params) ^ (s) : tys ]] := MapTs[[ params ^ (s) : tys]].
   
-  [[ ValueParams(xs, t) ^ (s) : tys ]] := 
-     Map
-  
-rules
+  [[ ValueParams([x], t) ^ (s) : ty ]] := 
+     ValParam{x} <- s, ValParam{x} : ty, [[ t ^ (s) : ty ]].
+     // todo: generalize to list of variables 
+     
+  [[ PackedArraySchema(bss, t) ^ (s) : ArrayT(ty) ]] := 
+     //Map[[ bss ^ (s) ]], 
+     [[ t ^ (s) : ty ]].
+     // todo: how to represent semantic types?
+     // todo: what to do with bounds
+     
+  [[ UnpackedArraySchema(bss, t) ^ (s) : ArrayT(ty) ]] := 
+     //Map[[ bss ^ (s) ]], 
+     [[ t ^ (s) : ty ]].
+     // todo: how to represent semantic types?
+     // todo: what to do with bounds
+     
+  [[ BoundSpec(lo, hi, t) ^ (s) ]] := 
+     [[ t ^ (s) : ty ]]. 
+     // todo: what are identifiers in bound specification?
+     // t should be an ordinal type identifier, which means?
 
-   Map[[ [] ^ (s) ]] := true.   
-   Map[[ [ x | xs ] ^ (s) ]] := [[ x ^ (s) ]], Map[[ xs ^ (s) ]].
+rules // statements
+
+  [[ Labeled(l, stm) ^ (s) ]] := 
+     [[ l ^ (s) ]], [[ stm ^ (s) ]].
+  
+  [[ Assign(v, e) ^ (s) ]] := 
+     [[ v ^ (s) : ty1 ]], [[ e ^ (s) : ty2 ]], ty1 == ty2.
+     // todo: subtype check?
+    
+  [[ ProcCall(f, params) ^ (s) ]] := 
+     Proc{f} -> s, Proc{f} |-> d, d: ProcT(tys), 
+     [[ params ^ (s) : tys ]].
+     
+  [[ Goto(l) ^ (s) ]] := true. 
+     // todo: anything to check?
+  
+  [[ Compound(stms) ^ (s) ]] :=
+     Map[[ stms ^ (s) ]].
+     
+  [[ While(e, stm) ^ (s) ]] := 
+     [[ e ^ (stm) : ty ]], 
+     ty == BoolT() | error "boolean expression expected",
+     [[ stm ^ (s) ]].
+     
+  [[ Repeat(stm, e) ^ (s) ]] := 
+     [[ e ^ (stm) : ty ]], 
+     ty == BoolT() | error "boolean expression expected",
+     [[ stm ^ (s) ]].
+     
+  [[ For(x, e1, _, e2, stm) ^ (stm) ]] :=
+     new s', s' -P-> s, Var{x} <- s', Var{x} : IntT(),
+     [[ e1 ^ (s) : IntT() ]], [[ e2 ^ (s) : IntT() ]], 
+     [[ stm ^ (s') ]].
+     
+  [[ If(e, stm) ^ (s) ]] :=
+     [[ e ^ (s) : ty ]], 
+     ty == BoolT() | error "boolean expression expected",
+     [[ stm ^ (stm) ]].
+     
+  [[ IfElse(e, stm1, stm2) ^ (s) ]] :=
+     [[ e ^ (s) : ty ]], 
+     ty == BoolT() | error "boolean expression expected",
+     [[ stm ^ (stm1) ]], [[ stm ^ (stm2) ]].
+     
+  [[ Case(e, cs) ^ (s) ]] := 
+     [[ e ^ (s) : ty ]], MapT[[ cs ^ (s) : ty ]].
+     
+  [[ CaseLimb(cnsts, stm) ^ (s) : ty ]] :=
+     Map[[ cnsts ^ (s) : ty ]], [[ stm ^ (s) ]].
+     
+  [[ With(vs, stm) ^ (s) ]] := 
+     [[ stm ^ (s) ]], 
+     false | error "analysis for With not implemented".
+     // todo: treat with variables
+
+rules // parameters
+
+  //[[ NoParams() ^ (s) : TNil()  ]] := true. 
+  [[ Params(es) ^ (s) : tys ]] := MapTs[[ es ^ (s) : tys ]].
+  
+rules // expressions
+
+  [[ String(_) ^ (s) : StringT() ]] := true.
+  
+  [[ NilE() ^ (s) : NilT() ]] := 
+     false | error "what do do with nil?".
+  
+  [[ Not(e) ^ (s) : BoolT() ]] := [[ e ^ (s) : BoolT() ]].
+  
+  [[ Sign(_, e) ^ (s) : IntT() ]] := [[ e ^ (s) : IntT() ]]. // todo: ? 
+  
+  [[ RelOp(e1, op, e2) ^ (s) : BoolT() ]] :=
+     [[ e1 ^ (s) : ty1 ]], [[ e2 ^ (s) : ty2 ]], ty1 == ty2. 
+     // todo: ??    
+     // todo: what is the type of in?     
+     // todo: should probably associate signature with operators
+       
+  [[ AddOp(e1, op, e2) ^ (s) : IntT() ]] :=
+     [[ e1 ^ (s) : IntT() ]], [[ e2 ^ (s) : IntT() ]]. 
+     
+  [[ MulOp(e1, op, e2) ^ (s) : IntT() ]] :=
+     [[ e1 ^ (s) : IntT() ]], [[ e2 ^ (s) : IntT() ]]. 
+
+rules // variables
+
+  [[ Ref(x) ^ (s) : ty ]] :=
+     Var{x} -> s, Var{x} |-> d, d : ty.
+     // todo: identifier can also be other things: function, procedure, ...
+     
+  [[ IndexVar(v, es) ^ (s) : ty ]] :=
+     [[ v ^ (s) : ArrayT(ty) ]], 
+     MapT[[ es ^ (s) : IntT() ]], 
+     false | note "IndexVar not implemented".
+     // todo: check es against declared dimensions of array
+     
+  [[ FieldDes(v, x) ^ (s) : ty ]] :=
+     [[ v ^ (s) : RecordT(s') ]],
+     Field{x} -> s', Field{x} |-> d, d : ty.
+     
+  [[ FileVar(v) ^ (s) : ty ]] := 
+     [[ v ^ (s) : FileT(ty) ]].
+     
+  [[ RefVar(v) ^ (s) : ty ]] :=
+     [[ v ^ (s) : PointerT(ty) ]].
+     
+  [[ Set(es) ^ (s) : SetT(ty) ]] :=
+     MapT[[ es ^ (s) : ty ]].
+     
+  [[ FunCall(x, params) ^ (s) : ty ]] := 
+     Func{x} -> s, Func{x} : FunT(tys, ty),
+     [[ params ^ (s) : tys ]].
+
+rules // types
+
+  // type equality: nominal or structural?
+
+  [[ TypeId(x) ^ (s) : Type(d) ]] := 
+     Type{x} -> s, Type{x} |-> d.
+  
+  [[ EnumType(xs) ^ (s) : EnumT(s') ]] := 
+    new s', false | note "EnumType not implemented".
+    
+  [[ SubrangeType(c1, c2) ^ (s) : SubrangeT(ty1, ty2) ]] :=
+    false | note "SubrangeType type not implemented".    
+    //[[ c1 ^ (s) : ty1 ]], [[ c2 ^ (s) : ty2 ]].
+    
+  [[ Packed(t) ^ (s) : ty ]] :=
+    false | note "Packed type not implemented".    
+    
+//  [[ ArrayType(ts, t) ^ (s) : ArrayT(tys, ty) ]] :=
+//    MapTs[[ ts ^ (s) : tys ]], [[ t ^ (s) : ty ]].
+    
+  // ignoring subranges for now
+  [[ ArrayType(ts, t) ^ (s) : ArrayT(ty) ]] :=
+    [[ t ^ (s) : ty ]].
+
+  [[ SetType(t)     ^ (s) : SetT(ty)     ]] := [[ t ^ (s) : ty ]].    
+  [[ FileType(t)    ^ (s) : FileT(ty)    ]] := [[ t ^ (s) : ty ]].    
+  [[ PointerType(t) ^ (s) : PointerT(ty) ]] := [[ t ^ (s) : ty ]].
+         
+rules // record types
+
+  [[ RecordType(fs) ^ (s) : RecordT(s') ]] :=
+     new s', s' -P-> s, [[ fs ^ (s') ]].
+     
+  [[ FieldList(rss) ^ (s) ]] :=
+     Map[[ rss ^ (s) ]].
+     
+  [[ FieldList(rss, variant) ^ (s) ]] :=
+     Map[[ rss ^ (s) ]],
+     false | note "record type with variant not implemented". 
+     
+  [[ RecordSection(xs, t) ^ (s) ]] :=
+     [[ t ^ (s) : ty ]], 
+     MapT[[ xs ^ (s) : ty ]].
+     
+  [[ FieldId(x) ^ (s) : ty ]] := 
+     Field{x} <- s, Field{x} : ty.
+     
+  // todo: variants
+
+rules // constants
+
+  [[ ConstId(_, x) ^ (s) : ty ]] := 
+     Const{x} -> s, Const{x} |-> d, d : ty.
+     
+  [[ Int(_)  ^ (s) : IntT()  ]] := true.
+  [[ Real(_) ^ (s) : RealT() ]] := true.
+  
+rules // auxiliary
+
+  Map[[ [] ^ (s) ]] := true.   
+  Map[[ [ x | xs ] ^ (s) ]] := [[ x ^ (s) ]], Map[[ xs ^ (s) ]].
    
-   MapT[[ [] ^ (s) : ty ]] := true.   
-   MapT[[ [ x | xs ] ^ (s) : ty ]] := [[ x ^ (s) : ty ]], MapT[[ xs ^ (s) : ty ]].
+  MapT[[ [] ^ (s) : ty ]] := true.   
+  MapT[[ [ x | xs ] ^ (s) : ty ]] := [[ x ^ (s) : ty ]], MapT[[ xs ^ (s) : ty ]].
    
-   MapTs[[ [] ^ (s) : [] ]] := true.   
-   MapTs[[ [ x | xs ] ^ (s) : [ty | tys] ]] := [[ x ^ (s) : ty ]], MapTs[[ xs ^ (s) : tys ]].
+  MapTs[[ [] ^ (s) : TNil() ]] := true.   
+  MapTs[[ [ x | xs ] ^ (s) : TCons(ty, tys) ]] := [[ x ^ (s) : ty ]], MapTs[[ xs ^ (s) : tys ]].
    
