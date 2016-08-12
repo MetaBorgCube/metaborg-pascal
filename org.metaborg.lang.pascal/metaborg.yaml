@@ -29,3 +29,6 @@ language:
     - stratego-sdf
     - -la
     - strc
+placeholder:
+  prefix : "$"
+ 
