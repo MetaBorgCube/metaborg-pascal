@@ -7,25 +7,6 @@ imports
   outline
   analysis
   
-imports
-
-  signatures/nabl2/shared/common/-
-  signatures/nabl2/shared/constraints/-
-
-  pp/nabl2/shared/common/-
-  pp/nabl2/shared/constraints/-
-
-  nabl2/shared/-
-  
-imports
-
-  nabl2/runtime/analysis/-
-  nabl2/runtime/common/-
-  nabl2/runtime/editor/-
-  nabl2/runtime/solver/-
-  nabl2/runtime/stdlib/-
-  nabl2/runtime/pp
-  
 signature 
 
   types
@@ -65,7 +46,7 @@ rules
      [[tds ^ (s)]],
      [[vds ^ (s)]],
      Map[[pfds ^ (s)]],
-     [[stms ^ (s)]].
+     Map[[ stms ^ (s) ]].
      
   [[ NoLabelDecls() ^ (s) ]] := true.  
   [[ LabelDecls(_)  ^ (s) ]] := false | note "label declarations not implemented".
@@ -101,7 +82,7 @@ rules
   [[ FuncDirective(_, _) ^ (s) ]] := false | error "FuncDirectivenot implemented".
   [[ FuncId(_, _) ^ (s) ]] := false | error "FuncId not implemented". 
   
-  [[ Statements(stms) ^ (s) ]] := Map[[ stms ^ (s) ]].
+  // [[ Statements(stms) ^ (s) ]] := Map[[ stms ^ (s) ]].
   
 rules // procedure and function definitions
 
@@ -141,7 +122,7 @@ rules // procedure and function definitions
 rules // statements
 
   [[ Labeled(l, stm) ^ (s) ]] := 
-     [[ l ^ (s) ]], [[ stm ^ (s) ]].
+     [[ l ^ (s) ]], [[ stm ^ (s) ]]. 
   
   [[ Assign(v, e) ^ (s) ]] := 
      [[ v ^ (s) : ty1 ]], [[ e ^ (s) : ty2 ]], ty1 == ty2.

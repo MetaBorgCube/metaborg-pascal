@@ -7,7 +7,7 @@ imports
 
 language
 
-  extensions : pas
+  extensions : pas, pp
 
   provider : target/metaborg/stratego.ctree
   provider : target/metaborg/stratego-javastrat.jar
