@@ -1,0 +1,22 @@
+module dynamic-semantics
+
+imports ds-signatures/Pascal-sig
+
+signature
+  sorts V
+  constructors
+    IntV : Int -> V
+  arrows
+    Program --> V
+    Block --> V
+    VariableDeclarations --> V
+    Statements --> V
+    
+rules
+
+   Program(h, b) --> v
+   where b --> v.
+   
+   Block(lbls, cds, tds, vds, pfds, stms) --> v
+   where 
+     vds --> _; stms --> v.
