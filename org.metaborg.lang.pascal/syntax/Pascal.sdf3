@@ -10,86 +10,89 @@ context-free syntax // Programs and Blocks
   >
 
   Programheading.ProgramHeading = 
-    <program <Identifier> (<{Identifier ","}*>) ;> {case-insensitive}
+    <program <Identifier> (<{Identifier ", "}*>) ;> {case-insensitive}
 
   Block.Block = <
     <LabelDeclarations>
     <ConstantDefinitions>
     <TypeDefinitions>
     <VariableDeclarations>
-    <ProcedureOrFunctionDeclaration*>
-    <Statements>
-  >
-  
+    
+    <{ProcedureOrFunctionDeclaration "\n\n"}*>
+    
+    begin  
+      <{Statement ";\n"}*>
+    end
+  > {case-insensitive} 
+   
   LabelDeclarations.NoLabelDecls = <>
 
-  LabelDeclarations.LabelDecls =
-    <label 
-       <{Label ","}*>;> {case-insensitive}
+  LabelDeclarations.LabelDecls = <
+    label 
+       <{Label ", "}*>;
+  > {case-insensitive}
 
   ConstantDefinitions.NoConstDefs = <>
   
-  ConstantDefinitions.ConstDefs =
-    <const 
-       <{ConstantDefinition "\n"}*>> {case-insensitive}
+  ConstantDefinitions.ConstDefs = <
+    const 
+       <{ConstantDefinition "\n"}*>
+  > {case-insensitive}
 
   ConstantDefinition.ConstDef =
     <<Identifier> = <Constant>;>
 
   TypeDefinitions.NoTypeDefs = <>
   
-  TypeDefinitions.TypeDefs =
-    <type 
-       <{TypeDefinition "\n"}*>> {case-insensitive}
+  TypeDefinitions.TypeDefs = <
+    type 
+      <{TypeDefinition "\n"}+>
+  > {case-insensitive}
 
   TypeDefinition.TypeDef =
     <<Identifier> = <Type>;>
 
   VariableDeclarations.NoVarDecls = <>
   
-  VariableDeclarations.VarDecls =
-    <var 
-       <{VariableDeclaration "\n"}*>> {case-insensitive}
+  VariableDeclarations.VarDecls = <
+    var 
+       <{VariableDeclaration "\n"}*>
+  > {case-insensitive}
 
   VariableDeclaration.VarDecl =
-    <<{VariableIdentifier ","}*> : <Type>;>
+    <<{VariableIdentifier ", "}*> : <Type>;>
     
   VariableIdentifier.VarId = <<Identifier>>
 
 context-free syntax // procedure and function declarations
 
-  ProcedureOrFunctionDeclaration.ProcDecl =
-    <<ProcedureHeading>;
-     <Block>;>
-    
-  ProcedureOrFunctionDeclaration.ProcDirective =
-    <<ProcedureHeading>;
-     <Directive>;>
-    
-  ProcedureOrFunctionDeclaration.ProcId =
-    <<ProcedureIdentification>;
-     <Block>;>
-
-  ProcedureOrFunctionDeclaration.FuncDecl =
-    <<FunctionHeading>; 
-     <Block>;>
-     
-  ProcedureOrFunctionDeclaration.FuncDirective =
-    <<FunctionHeading>; 
-     <Directive>;>
-    
-  ProcedureOrFunctionDeclaration.FuncId =
-    <<FunctionIdentification>;
-     <Block>;>
+  ProcedureOrFunctionDeclaration.ProcDecl = <
+    <ProcedureHeading>;
+    <Block>;
+  >   
+  ProcedureOrFunctionDeclaration.ProcDirective = <
+    <ProcedureHeading>;
+    <Directive>;
+  >    
+  ProcedureOrFunctionDeclaration.ProcId = <
+    <ProcedureIdentification>;
+    <Block>;
+  >
+  ProcedureOrFunctionDeclaration.FuncDecl = <
+    <FunctionHeading>; 
+    <Block>;
+  >    
+  ProcedureOrFunctionDeclaration.FuncDirective = <
+    <FunctionHeading>; 
+    <Directive>;
+  >   
+  ProcedureOrFunctionDeclaration.FuncId = <
+    <FunctionIdentification>;
+    <Block>;
+  >
 
   Directive.Forward = <forward> {case-insensitive}
   // Directive = Compilerdefineddirectives
-  
-  Statements.Statements = <
-    begin  
-      <{Statement ";"}*>
-    end
-  > {case-insensitive} 
 
 context-free syntax // Procedure and Function Definitions
 
@@ -110,13 +113,13 @@ context-free syntax // Procedure and Function Definitions
 //  FormalParameters.NoParams = <>
   
   FormalParameters.Params =
-    <(<{FormalParameter ";"}+>)>
+    <(<{FormalParameter "; "}+>)>
     
   FormalParameter.ValueParams =
-    <<{Identifier ","}+> : <ParameterType>>
+    <<{Identifier ", "}+> : <ParameterType>>
 
   FormalParameter.VarParams =
-    <var <{Identifier ","}+> : <ParameterType>> {case-insensitive}
+    <var <{Identifier ", "}+> : <ParameterType>> {case-insensitive}
 
   FormalParameter = ProcedureHeading
   FormalParameter = FunctionHeading
@@ -128,7 +131,7 @@ context-free syntax // Procedure and Function Definitions
     <packed array [<BoundSpecification>] of <TypeIdentifier>> {case-insensitive}
 
   ConformantArraySchema.UnpackedArraySchema =
-    <array [<{BoundSpecification ";"}+>] of <ArrayType>> {case-insensitive}
+    <array [<{BoundSpecification "; "}+>] of <ArrayType>> {case-insensitive}
     
   ArrayType = TypeIdentifier 
   ArrayType = ConformantArraySchema
@@ -156,7 +159,7 @@ context-free syntax // Statements
   
   Statement.Compound = <
     begin 
-      <{Statement ";"}+> 
+      <{Statement ";\n"}+> 
     end
   > {case-insensitive}
   
@@ -198,10 +201,10 @@ context-free syntax // Statements
   > {case-insensitive}
   
   CaseLimb.CaseLimb = 
-    <<{Constant ","}+> : <Statement>;>
+    <<{Constant ", "}+> : <Statement>;>
 
   Statement.With = <
-    with <{Variable ","}+> do
+    with <{Variable ", "}+> do
       <Statement>
   > {case-insensitive}
   
@@ -209,7 +212,7 @@ context-free syntax // parameters
 
   //ActualParameters.NoParams = <>
   
-  ActualParameters.Params = <(<{Expression ","}*>)>
+  ActualParameters.Params = <(<{Expression ", "}*>)>
 
 context-free syntax // Expressions
   
@@ -222,8 +225,8 @@ context-free syntax // Expressions
   Expression.Set    = <[<{Expression ","}*>]>
       
   Expression.Sign  = <<Sign> <Expression>>
-  Expression.RelOp = <<Expression> <RelationalOperator>     <Expression>>  {left} // ?
-  Expression.AddOp = <<Expression> <AdditionOperator>       <Expression>>  {left} // ?
+  Expression.RelOp = <<Expression> <RelationalOperator> <Expression>>  {left} // ?
+  Expression.AddOp = <<Expression> <AdditionOperator> <Expression>>  {left} // ?
   Expression.MulOp = <<Expression> <MultiplicationOperator> <Expression>>  {left} // ?
  
 context-free syntax // operators
@@ -257,7 +260,7 @@ context-free syntax // variables
   Variable.Ref = Identifier
 
   Variable.IndexVar = 
-    <<Variable> [<{Expression ","}*>]>
+    <<Variable> [<{Expression ", "}*>]>
     
   Variable.FieldDes = 
     <<Variable>.<Identifier>>
@@ -279,7 +282,7 @@ context-free syntax // Types
   TypeIdentifier.TypeId = Identifier
   
   SimpleType.EnumType = 
-    <(<{Identifier ","}+>)>
+    <(<{Identifier ", "}+>)>
   
   SimpleType.SubrangeType =
     <<Constant> .. <Constant>>
@@ -291,7 +294,7 @@ context-free syntax // Types
     <packed <UnpackedStructuredType>> {case-insensitive}
   
   UnpackedStructuredType.ArrayType = 
-    <array [<{SimpleType ","}+>] of <Type>> {case-insensitive}
+    <array [<{SimpleType ", "}+>] of <Type>> {case-insensitive}
     
   UnpackedStructuredType.SetType = 
     <set of <Type>> {case-insensitive}
@@ -319,19 +322,19 @@ context-free syntax // Record Fields
     <<{RecordSection "\n"}*>>
 
   RecordSection.RecordSection =
-    <<{FieldIdentifier ","}+> : <Type>;>
+    <<{FieldIdentifier ", "}+> : <Type>;>
 
   FieldIdentifier.FieldId = Identifier
   
   Variants.Variant = <
     case <Tagfield?> <TypeIdentifier> of 
-      <{Variant ";"}+>;
+      <{Variant ";\n"}+>;
   > {case-insensitive}
 
   Tagfield.Tag = <<Identifier> :>
 
   Variant.Variant = 
-    <<{Constant ","}+> : (<FieldList>)>
+    <<{Constant ", "}+> : (<FieldList>)>
 
 context-free syntax // Input/Output
 
