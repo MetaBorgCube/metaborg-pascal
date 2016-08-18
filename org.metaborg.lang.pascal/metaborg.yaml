@@ -1,6 +1,8 @@
 ---
 id: org.metaborg:org.metaborg.lang.pascal:0.1.0-SNAPSHOT
 name: Pascal
+placeholder:
+  prefix: "$"
 dependencies:
   compile:
   - org.metaborg:org.metaborg.meta.lang.stratego:${metaborgVersion}
@@ -12,6 +14,8 @@ dependencies:
   - org.metaborg:org.metaborg.meta.nabl2.shared:${metaborgVersion}
   - org.metaborg:org.metaborg.meta.nabl2.runtime:${metaborgVersion}
 language:
+  sdf:
+    sdf2table: java
   stratego:
     format: ctree
     args:
@@ -29,6 +33,3 @@ language:
     - stratego-sdf
     - -la
     - strc
-placeholder:
-  prefix : "$"
- 
