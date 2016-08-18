@@ -1,4 +1,6 @@
-program foo()
+program foo();
 
+begin
 
+end.
 
