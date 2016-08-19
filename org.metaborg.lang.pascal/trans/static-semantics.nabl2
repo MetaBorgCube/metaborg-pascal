@@ -41,11 +41,11 @@ rules
     [[ b ^ (s) ]].
     
   [[ Block(lds, cds, tds, vds, pfds, stms) ^ (s) ]] := 
-     [[lds ^ (s)]],
-     [[cds ^ (s)]],
-     [[tds ^ (s)]],
-     [[vds ^ (s)]],
-     Map[[pfds ^ (s)]],
+     [[ lds ^ (s) ]],
+     [[ cds ^ (s) ]],
+     [[ tds ^ (s) ]],
+     [[ vds ^ (s) ]],
+     Map[[ pfds ^ (s) ]],
      Map[[ stms ^ (s) ]].
      
   [[ NoLabelDecls() ^ (s) ]] := true.  
