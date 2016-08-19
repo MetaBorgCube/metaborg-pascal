@@ -220,6 +220,8 @@ context-free syntax // Expressions
   Expression        = Variable
   Expression        = Number
   Expression.String = String
+  Expression.True   = <true> {case-insensitive}
+  Expression.False  = <false> {case-insensitive}
   Expression.NilE   = <nil> {case-insensitive}
   Expression.Not    = <not <Expression>> {case-insensitive}
   Expression.Set    = <[<{Expression ","}*>]>
@@ -278,6 +280,9 @@ context-free syntax // Types
 
   Type = SimpleType 
   Type = TypeIdentifier
+  
+  Type.IntType = <integer> {case-insensitive}
+  Type.BoolType = <boolean> {case-insensitive}
    
   TypeIdentifier.TypeId = Identifier
   
@@ -370,6 +375,10 @@ context-free syntax
   Identifier = <else> {reject,case-insensitive}
   Identifier = <case> {reject,case-insensitive}
   Identifier = <of> {reject,case-insensitive}
+  Identifier = <integer> {reject,case-insensitive}
+  Identifier = <boolean> {reject,case-insensitive}
+  Identifier = <true> {reject,case-insensitive}
+  Identifier = <false> {reject,case-insensitive}
   
 context-free syntax
   
