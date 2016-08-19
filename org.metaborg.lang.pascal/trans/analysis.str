@@ -2,11 +2,30 @@ module analysis
 
 imports
   
-  nabl2shared
-  nabl2runtime 
   static-semantics
   pp
+  
+imports
 
+  nabl2shared
+  signatures/nabl2/shared/common/-
+  signatures/nabl2/shared/constraints/-
+
+  pp/nabl2/shared/common/-
+  pp/nabl2/shared/constraints/-
+
+  nabl2/shared/-
+
+imports
+
+  nabl2runtime 
+  nabl2/runtime/analysis/-
+  nabl2/runtime/common/-
+  nabl2/runtime/editor/-
+  nabl2/runtime/solver/-
+  nabl2/runtime/stdlib/-
+  nabl2/runtime/pp
+   
 rules // Analysis
 
   editor-analyze = analyze(id)
