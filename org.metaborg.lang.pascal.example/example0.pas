@@ -1,5 +1,8 @@
 program example0();
-var x : int;
+var 
+  x : boolean;
 begin
-  x := 1
+  x := true
 end.
+
+  
