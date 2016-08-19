@@ -6,6 +6,27 @@ imports
   pp
   outline
   analysis
+
+imports
+
+  nabl2shared
+  signatures/nabl2/shared/common/-
+  signatures/nabl2/shared/constraints/-
+
+  pp/nabl2/shared/common/-
+  pp/nabl2/shared/constraints/-
+
+  nabl2/shared/-
+
+imports
+
+  nabl2runtime 
+  nabl2/runtime/analysis/-
+  nabl2/runtime/common/-
+  nabl2/runtime/editor/-
+  nabl2/runtime/solver/-
+  nabl2/runtime/stdlib/-
+  nabl2/runtime/pp
   
 signature 
 
@@ -181,6 +202,10 @@ rules // parameters
   
 rules // expressions
 
+  [[ True() ^ (s) : BoolT() ]] := true.
+  
+  [[ False() ^ (s) : BoolT() ]] := true.
+
   [[ String(_) ^ (s) : StringT() ]] := true.
   
   [[ NilE() ^ (s) : NilT() ]] := 
@@ -234,6 +259,9 @@ rules // variables
 rules // types
 
   // type equality: nominal or structural?
+  
+  [[ IntType()  ^ (s) : IntT()  ]] := true.
+  [[ BoolType() ^ (s) : BoolT() ]] := true.
 
   [[ TypeId(x) ^ (s) : Type(d) ]] := 
      Type{x} -> s, Type{x} |-> d.
