@@ -142,6 +142,9 @@ rules // procedure and function definitions
 
 rules // statements
 
+  [[ Term(stm) ^ (s) ]] := 
+     [[ stm ^ (s) ]].
+
   [[ Labeled(l, stm) ^ (s) ]] := 
      [[ l ^ (s) ]], [[ stm ^ (s) ]]. 
   
@@ -261,6 +264,7 @@ rules // types
   // type equality: nominal or structural?
   
   [[ IntType()  ^ (s) : IntT()  ]] := true.
+  
   [[ BoolType() ^ (s) : BoolT() ]] := true.
 
   [[ TypeId(x) ^ (s) : Type(d) ]] := 
