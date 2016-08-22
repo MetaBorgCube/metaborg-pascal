@@ -1,0 +1,14 @@
+module pascal-static-semantics
+
+language Pascal
+start symbol Program
+
+test variable reference [[
+  program example0 () ;
+  var
+    [[x]] : boolean;
+  begin
+    [[x]] := true
+  end.
+]] resolve #2 to #1
+

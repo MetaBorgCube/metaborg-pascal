@@ -1,0 +1,14 @@
+module pascal-syntax
+
+language Pascal
+start symbol Program
+
+test empty program [[
+  program example0 () ;
+  var
+    x : boolean;
+  begin
+    x := true
+  end.
+]] parse succeeds
+
