@@ -1,7 +1,22 @@
 program $Identifier () ;
 
 procedure $Identifier $FormalParameters;
-     $Block;
+     $LabelDeclarations
+     $ConstantDefinitions
+     $TypeDefinitions
+     $VariableDeclarations
+          
+     begin
+       $Variable := $String;
+       if $Expression then
+         $Statement
+       else
+         begin
+           while not $Expression do
+             $Statement
+         end
+     end;
+         
 begin
   $Variable := $Expression;  
   while $Expression do
