@@ -54,7 +54,10 @@ signature
 
 rules
 
-  init ^ (s) := new s.
+  init ^ (s) := 
+    new s,
+    Proc{"writeln"} <- s, Proc{"writeln"} : ProcT([StringT()]),
+    Proc{"readln"} <- s, Proc{"readln"} : ProcT([PointerT(StringT())]).
 
 rules
 
@@ -115,6 +118,11 @@ rules // procedure and function definitions
      [[ params ^ (s) : tys]], 
      Func{f} <- s_par, Func{f} : FunT(tys, ty), 
      [[ t ^ (s) : ty ]], Var{f} <- s, Var{f} : ty. // return variable and type
+     
+  [[ FuncId(f) ^ (s_par, s) ]] :=
+     Func{f} -> s_par, Func{f} |-> d, d : FunT(tys, ty).
+     // reference to previous declaration?
+  
 
   //[[ NoParams() ^ (s) : TNil() ]] := true. 
   [[ Params(params) ^ (s) : tys ]] := MapTs[[ params ^ (s) : tys]].
@@ -172,10 +180,11 @@ rules // statements
      ty == BoolT() | error "boolean expression expected",
      [[ stm ^ (s) ]].
      
-  [[ For(x, e1, _, e2, stm) ^ (stm) ]] :=
+  [[ For(x, e1, _, e2, stm) ^ (s) ]] :=
      new s', s' -P-> s, Var{x} <- s', Var{x} : IntT(),
      [[ e1 ^ (s) : IntT() ]], [[ e2 ^ (s) : IntT() ]], 
      [[ stm ^ (s') ]].
+     // does for scope x?
      
   [[ If(e, stm) ^ (s) ]] :=
      [[ e ^ (s) : ty ]], 
