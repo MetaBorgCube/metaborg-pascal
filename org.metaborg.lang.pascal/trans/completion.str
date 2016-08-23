@@ -4,8 +4,36 @@ imports
   
   runtime/completion/-
   completion/Pascal-cp
+  pp/-
   pp
+ 
   
 rules
   
-  pp-completion = pp-partial-Pascal-string
+  get-proposals-empty-program-Pascal                         = get-proposals-empty-program(pp-partial-Pascal-string, parenthesize-Pascal, 
+                                                                                             Pascal-get-indent, Pascal-get-leading-ws, 
+                                                                                             Pascal-get-separator)
+  get-proposals-left-recursive-Pascal                        = get-proposals-left-recursive(pp-partial-Pascal-string, parenthesize-Pascal, 
+                                                                                             Pascal-get-indent, Pascal-get-leading-ws, 
+                                                                                             Pascal-get-separator)
+  get-proposals-right-recursive-Pascal                       = get-proposals-right-recursive(pp-partial-Pascal-string, parenthesize-Pascal, 
+                                                                                             Pascal-get-indent, Pascal-get-leading-ws, 
+                                                                                             Pascal-get-separator)
+  get-proposals-placeholder-Pascal                           = get-proposals-placeholder(pp-partial-Pascal-string, parenthesize-Pascal, 
+                                                                                             Pascal-get-indent, Pascal-get-leading-ws, 
+                                                                                             Pascal-get-separator)
+  get-proposals-optional-Pascal                              = get-proposals-optional(pp-partial-Pascal-string, parenthesize-Pascal, 
+                                                                                             Pascal-get-indent, Pascal-get-leading-ws, 
+                                                                                             Pascal-get-separator)
+  get-proposals-list-Pascal                                  = get-proposals-list(pp-partial-Pascal-string, parenthesize-Pascal, 
+                                                                                             Pascal-get-indent, Pascal-get-leading-ws, 
+                                                                                             Pascal-get-separator)
+  get-proposals-incorrect-programs-Pascal                    = get-proposals-incorrect-programs(pp-partial-Pascal-string, parenthesize-Pascal, 
+                                                                                             Pascal-get-indent, Pascal-get-leading-ws, 
+                                                                                             Pascal-get-separator)
+  get-proposals-incorrect-programs-nested-Pascal             = get-proposals-incorrect-programs-nested(pp-partial-Pascal-string, parenthesize-Pascal, 
+                                                                                             Pascal-get-indent, Pascal-get-leading-ws, 
+                                                                                             Pascal-get-separator)
+  get-proposals-incorrect-programs-single-placeholder-Pascal = get-proposals-incorrect-programs-single-placeholder(pp-partial-Pascal-string, parenthesize-Pascal, 
+                                                                                             Pascal-get-indent, Pascal-get-leading-ws, 
+                                                                                             Pascal-get-separator)
