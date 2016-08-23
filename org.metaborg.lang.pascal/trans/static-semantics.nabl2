@@ -189,12 +189,12 @@ rules // statements
   [[ If(e, stm) ^ (s) ]] :=
      [[ e ^ (s) : ty ]], 
      ty == BoolT() | error "boolean expression expected",
-     [[ stm ^ (stm) ]].
+     [[ stm ^ (s) ]].
      
   [[ IfElse(e, stm1, stm2) ^ (s) ]] :=
      [[ e ^ (s) : ty ]], 
      ty == BoolT() | error "boolean expression expected",
-     [[ stm ^ (stm1) ]], [[ stm ^ (stm2) ]].
+     [[ stm1 ^ (s) ]], [[ stm2 ^ (s) ]].
      
   [[ Case(e, cs) ^ (s) ]] := 
      [[ e ^ (s) : ty ]], MapT[[ cs ^ (s) : ty ]].
