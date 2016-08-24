@@ -110,7 +110,6 @@ rules
   [[ NoConstDefs()  ^ (s) ]] := true.  
   [[ ConstDefs(cds) ^ (s) ]] := Map[[ cds ^ (s) ]].  
   [[ ConstDef(x, c) ^ (s) ]] := Const{x} <- s, [[ c ^ (s) : ty ]], Const{x} : ty.
-  // todo : c may also be a reference to previous constant
      
   [[ NoTypeDefs()  ^ (s) ]] := true. 
   [[ TypeDefs(tds) ^ (s) ]] := Map[[ tds ^ (s) ]].
@@ -121,7 +120,7 @@ rules
   [[ VarDecl(xs, t) ^ (s) ]] := [[ t ^ (s) : ty]], MapT[[ xs ^ (s) : ty ]].
   [[ VarId(x) ^ (s) : ty ]] := Var{x} <- s, Var{x} : ty.
  
-  // note: this does not properly implement declaration before use
+  // note: this does not implement declaration before use
   
   [[ ProcDecl(ph, b) ^ (s) ]] := 
      new s', s' -P-> s, 
@@ -131,8 +130,8 @@ rules
   [[ ProcId(_, _) ^ (s) ]] := false | error "ProcId not implemented".
  
   [[ FuncDecl(ph, b) ^ (s) ]] := 
-    new s', s' -P-> s, 
-    [[ ph ^ (s, s') ]], [[ b ^ (s') ]].
+     new s', s' -P-> s, 
+     [[ ph ^ (s, s') ]], [[ b ^ (s') ]].
   
   [[ FuncDirective(_, _) ^ (s) ]] := false | error "FuncDirectivenot implemented".
   [[ FuncId(_, _) ^ (s) ]] := false | error "FuncId not implemented". 
