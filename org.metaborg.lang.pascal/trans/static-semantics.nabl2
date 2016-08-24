@@ -56,15 +56,37 @@ rules
 
   init ^ (s) := 
     new s,
+    
+    Var{"eof"} <- s, Var{"eof"} : BoolT(),
+    
     Proc{"writeln"} <- s, Proc{"writeln"} : ProcT([StringT()]),
-    Proc{"readln"} <- s, Proc{"readln"} : ProcT([PointerT(StringT())]).
+    Proc{"readln"}  <- s, Proc{"readln"}  : ProcT([PointerT(StringT())]),
+    
+    Op{ADD()}  <- s, Op{ADD()}  : FunT([IntT(), IntT()], IntT()),    
+    Op{MIN()}  <- s, Op{MIN()}  : FunT([IntT(), IntT()], IntT()),   
+    Op{MUL()}  <- s, Op{MUL()}  : FunT([IntT(), IntT()], IntT()),  
+    Op{DIV()}  <- s, Op{DIV()}  : FunT([IntT(), IntT()], IntT()),  
+    Op{IDIV()} <- s, Op{IDIV()} : FunT([IntT(), IntT()], IntT()),  
+    Op{MOD()}  <- s, Op{MOD()}  : FunT([IntT(), IntT()], IntT()), 
+    
+    Op{EQ()}   <- s, Op{EQ()}   : FunT([IntT(), IntT()], BoolT()),
+    Op{NEQ()}  <- s, Op{NEQ()}  : FunT([IntT(), IntT()], BoolT()),
+    Op{LT()}   <- s, Op{LT()}   : FunT([IntT(), IntT()], BoolT()),
+    Op{LEQ()}  <- s, Op{LEQ()}  : FunT([IntT(), IntT()], BoolT()),
+    Op{GT()}   <- s, Op{GT()}   : FunT([IntT(), IntT()], BoolT()),
+    Op{GEQ()}  <- s, Op{GEQ()}  : FunT([IntT(), IntT()], BoolT()),
+    
+    Op{IN()}   <- s, Op{IN()}   : FunT([ty, SetT(ty)], BoolT()), // correct?
+    
+    Op{OR()}   <- s, Op{OR()}   : FunT([BoolT(), BoolT()], BoolT()),
+    Op{AND()}  <- s, Op{AND()}  : FunT([BoolT(), BoolT()], BoolT()).
 
 rules
 
   [[ Program(h, b) ^ (s) ]] :=
     [[ b ^ (s) ]].
     
-  [[ Block(lds, cds, tds, vds, pfds, stms) ^ (s) ]] := 
+  [[ Block(lds, cds, tds, vds, pfds, stms, _) ^ (s) ]] := 
      [[ lds ^ (s) ]],
      [[ cds ^ (s) ]],
      [[ tds ^ (s) ]],
@@ -134,10 +156,11 @@ rules // procedure and function definitions
      // todo: generalize to list of variables 
           
   [[ PackedArraySchema(bss, t) ^ (s) : ArrayT(ty) ]] := 
-     //Map[[ bss ^ (s) ]], 
+     Map[[ bss ^ (s) : tys ]], 
      [[ t ^ (s) : ty ]].
-     // todo: how to represent semantic types?
-     // todo: what to do with bounds
+     
+  [[ SubrangeType(c1, c2) ^ (s) : IntT() ]] :=
+     [[ c1 ^ (s) : IntT() ]], [[ c2 ^ (s) : IntT() ]].
      
   [[ UnpackedArraySchema(bss, t) ^ (s) : ArrayT(ty) ]] := 
      //Map[[ bss ^ (s) ]], 
@@ -152,8 +175,8 @@ rules // procedure and function definitions
 
 rules // statements
 
-  [[ Term(stm) ^ (s) ]] := 
-     [[ stm ^ (s) ]].
+  //[[ Term(stm) ^ (s) ]] := 
+  //   [[ stm ^ (s) ]].
 
   [[ Labeled(l, stm) ^ (s) ]] := 
      [[ l ^ (s) ]], [[ stm ^ (s) ]]. 
@@ -169,16 +192,16 @@ rules // statements
   [[ Goto(l) ^ (s) ]] := true. 
      // todo: anything to check?
   
-  [[ Compound(stms) ^ (s) ]] :=
+  [[ Compound(stms, _) ^ (s) ]] :=
      Map[[ stms ^ (s) ]].
      
   [[ While(e, stm) ^ (s) ]] := 
-     [[ e ^ (stm) : ty ]], 
+     [[ e ^ (s) : ty ]], 
      ty == BoolT() | error "boolean expression expected",
      [[ stm ^ (s) ]].
      
   [[ Repeat(stm, e) ^ (s) ]] := 
-     [[ e ^ (stm) : ty ]], 
+     [[ e ^ (s) : ty ]], 
      ty == BoolT() | error "boolean expression expected",
      [[ stm ^ (s) ]].
      
@@ -216,6 +239,10 @@ rules // parameters
   
 rules // expressions
 
+  //[[ e1 @ Amb([e2 | _ ]) ^ (s) : ty ]] :=
+  //   [[ e2 ^ (s) : ty ]],
+  //   false | warning "ambiguous term" @e1.
+
   [[ True() ^ (s) : BoolT() ]] := true.
   
   [[ False() ^ (s) : BoolT() ]] := true.
@@ -230,16 +257,19 @@ rules // expressions
   [[ Sign(_, e) ^ (s) : IntT() ]] := [[ e ^ (s) : IntT() ]]. // todo: ? 
   
   [[ RelOp(e1, op, e2) ^ (s) : BoolT() ]] :=
-     [[ e1 ^ (s) : ty1 ]], [[ e2 ^ (s) : ty2 ]], ty1 == ty2. 
-     // todo: ??    
-     // todo: what is the type of in?     
-     // todo: should probably associate signature with operators
+     Op[[ op ^ (s) : FunT([ty1, ty2], ty) ]],
+     [[ e1 ^ (s) : ty1 ]], [[ e2 ^ (s) : ty2 ]].  
        
   [[ AddOp(e1, op, e2) ^ (s) : IntT() ]] :=
-     [[ e1 ^ (s) : IntT() ]], [[ e2 ^ (s) : IntT() ]]. 
+     Op[[ op ^ (s) : FunT([ty1, ty2], ty) ]],
+     [[ e1 ^ (s) : ty1 ]], [[ e2 ^ (s) : ty2 ]]. 
      
-  [[ MulOp(e1, op, e2) ^ (s) : IntT() ]] :=
-     [[ e1 ^ (s) : IntT() ]], [[ e2 ^ (s) : IntT() ]]. 
+  [[ MulOp(e1, op, e2) ^ (s) : ty ]] :=
+     Op[[ op ^ (s) : FunT([ty1, ty2], ty) ]],
+     [[ e1 ^ (s) : ty1 ]], [[ e2 ^ (s) : ty2 ]]. 
+     
+  Op[[ op ^ (s) : ty ]] :=
+    Op{op} -> s, Op{op} |-> d, d : ty.
 
 rules // variables
 
@@ -249,8 +279,7 @@ rules // variables
      
   [[ IndexVar(v, es) ^ (s) : ty ]] :=
      [[ v ^ (s) : ArrayT(ty) ]], 
-     MapT[[ es ^ (s) : IntT() ]], 
-     false | note "IndexVar not implemented".
+     MapT[[ es ^ (s) : ty ]].
      // todo: check es against declared dimensions of array
      
   [[ FieldDes(v, x) ^ (s) : ty ]] :=
