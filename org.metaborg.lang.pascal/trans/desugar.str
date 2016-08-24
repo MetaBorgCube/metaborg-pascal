@@ -18,3 +18,9 @@ rules
     
   desugar-param :
     ValueParams(xs, t) -> <map(!ValueParams([<id>], t))> xs
+
+//  desugar : 
+//    TypeId(str) -> TypeId(<lower-case>str)
+//  
+//  desugar :
+//    TypeDef(x, t) -> TypeDef(<lower-case>x, t)
