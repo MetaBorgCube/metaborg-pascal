@@ -237,7 +237,7 @@ context-free syntax // Expressions
  
 context-free syntax // operators
 
-  RelationalOperator.Eq       = [=] 
+  RelationalOperator.EQ       = [=] 
   RelationalOperator.NEQ      = [<>] 
   RelationalOperator.LT       = [<]
   RelationalOperator.LEQ      = [<=] 
