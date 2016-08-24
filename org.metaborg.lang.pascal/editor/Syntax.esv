@@ -10,9 +10,9 @@ language
   table         : target/metaborg/sdf-new.tbl
   start symbols : Program
 
-  line comment  : "//"
-  block comment : "/*" * "*/"
-  fences        : [ ] ( ) { }
+  //line comment  : "//"
+  block comment : "{" "}"
+  fences        : [ ] ( ) { } 
 
 menus
   
@@ -20,6 +20,7 @@ menus
     
     action: "Format"          = editor-format (source)
     action: "Show parsed AST" = debug-show-aterm (source)
+    action: "Show desugared AST" = debug-show-desugared (source)
 
 views
   
