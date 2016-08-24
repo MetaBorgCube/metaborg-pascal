@@ -1,0 +1,20 @@
+module desugar
+
+imports
+  signatures/-
+
+strategies
+
+  desugar-all = topdown(try(desugar))
+  
+rules
+
+  desugar :
+    Params(ps) -> Params(ps')
+    where <mapconcat(try(desugar-param))> ps => ps'
+    
+  desugar-param :
+    VarParams(xs, t) -> <map(!VarParams([<id>], t))> xs
+    
+  desugar-param :
+    ValueParams(xs, t) -> <map(!ValueParams([<id>], t))> xs

@@ -4,6 +4,7 @@ imports
   
   static-semantics
   pp
+  desugar
   
 imports
 
@@ -28,7 +29,7 @@ imports
    
 rules // Analysis
 
-  editor-analyze = analyze(id)
+  editor-analyze = analyze(desugar-all)
 
 rules // Debugging
   
