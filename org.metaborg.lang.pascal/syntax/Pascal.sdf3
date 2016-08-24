@@ -257,9 +257,10 @@ context-free syntax // operators
   
 context-free priorities
 
-  Expression.Sign > Expression.MulOp > Expression.AddOp > Expression.RelOp,
-  
-  Expression.Not > Expression.RelOp
+  {Expression.Sign Expression.Not} 
+  > Expression.MulOp 
+  > Expression.AddOp 
+  > Expression.RelOp
   
 context-free syntax // variables
 
@@ -383,6 +384,7 @@ context-free syntax
   Identifier = <boolean> {reject,case-insensitive}
   Identifier = <true> {reject,case-insensitive}
   Identifier = <false> {reject,case-insensitive}
+  Identifier = <not> {reject,case-insensitive}
   
 context-free syntax
   
