@@ -9,8 +9,9 @@ context-free syntax // Programs and Blocks
     <Block>.
   >
 
-  Programheading.ProgramHeading = 
-    <program <Identifier> (<{Identifier ", "}*>) ;> {case-insensitive}
+  Programheading.ProgramHeading = <
+    program <Identifier> (<{Identifier ", "}*>);
+  > {case-insensitive}
 
   Block.Block = <
     <LabelDeclarations>
@@ -22,7 +23,7 @@ context-free syntax // Programs and Blocks
     
     begin  
       <{Statement ";\n"}*>     
-      <Term?>
+      <Term>
     end
   > {case-insensitive} 
    
@@ -148,8 +149,9 @@ context-free syntax // Statements
     <<Label> : <Statement>>
     // should probably not be another labeled statement
     
-  Term.Term =
-    <;> // optional empty statement
+  // optional empty statement at end of block
+  Term.NoTerm = <>
+  Term.Term   = <;> 
 
   Statement.Assign =
     <<Variable> := <Expression>>
@@ -163,7 +165,7 @@ context-free syntax // Statements
   Statement.Compound = <
     begin 
       <{Statement ";\n"}+> 
-      <Term?>
+      <Term>
     end
   > {case-insensitive}
   
