@@ -10,5 +10,16 @@ test variable reference [[
   begin
     x := [[x]]
   end.
-]] resolve #2 to #1
+]] resolve #2 to #1 
 
+test variable reference [[ 
+  program example0 () ;
+  var
+    x : boolean;
+  procedure f([[x]] : integer); 
+    begin      
+      x := [[x]]
+    end;
+  begin
+  end.
+]] resolve #2 to #1 
