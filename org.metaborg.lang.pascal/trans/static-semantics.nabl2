@@ -289,12 +289,16 @@ rules // variables
 
   [[ Ref(x) ^ (s) : ty ]] :=
      Var{x} -> s, Var{x} |-> d, d : ty.
+     
+  //[[ Ref(x) ^ (s) : ty ]] :=
+  //   (Var{x} -> s, Var{x} |-> d;
+  //   Const{x} -> s, Const{x} |-> d), d : ty.
+      
      // todo: identifier can also be other things: function, procedure, ...
      
   [[ IndexVar(v, es) ^ (s) : ty ]] :=
-     [[ v ^ (s) : ArrayT(ty) ]], 
-     MapT[[ es ^ (s) : ty ]].
-     // todo: check es against declared dimensions of array
+     [[ v ^ (s) : ArrayT(tys, ty) ]], 
+     MapTs[[ es ^ (s) : tys ]].
      
   [[ FieldDes(v, x) ^ (s) : ty ]] :=
      [[ v ^ (s) : RecordT(s') ]],
