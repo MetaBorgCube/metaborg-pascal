@@ -89,7 +89,6 @@ rules
   [[ VarDecl(xs, t) ^ (s) ]] := [[ t ^ (s) : ty]], MapT[[ xs ^ (s) : ty ]].
   [[ VarId(x) ^ (s) : ty ]] := Var{x} <- s, Var{x} : ty.
  
- 
   // note: this does not properly implement declaration before use
   
   [[ ProcDecl(ph, b) ^ (s) ]] := 
@@ -123,14 +122,17 @@ rules // procedure and function definitions
      Func{f} -> s_par, Func{f} |-> d, d : FunT(tys, ty).
      // reference to previous declaration?
   
-
   //[[ NoParams() ^ (s) : TNil() ]] := true. 
   [[ Params(params) ^ (s) : tys ]] := MapTs[[ params ^ (s) : tys]].
   
-  [[ ValueParams([x], t) ^ (s) : ty ]] := 
-     ValParam{x} <- s, ValParam{x} : ty, [[ t ^ (s) : ty ]].
+  [[ ValueParams([VarId(x)], t) ^ (s) : ty ]] := 
+     Var{x} <- s, Var{x} : ty.
      // todo: generalize to list of variables 
      
+  [[ VarParams([VarId(x)], t) ^ (s) : ty ]] := 
+     Var{x} <- s, Var{x} : ty, [[ t ^ (s) : ty ]].
+     // todo: generalize to list of variables 
+          
   [[ PackedArraySchema(bss, t) ^ (s) : ArrayT(ty) ]] := 
      //Map[[ bss ^ (s) ]], 
      [[ t ^ (s) : ty ]].
