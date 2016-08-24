@@ -288,8 +288,8 @@ context-free syntax // Types
   Type = SimpleType 
   Type = TypeIdentifier
   
-  TypeIdentifier.IntType = <integer> {case-insensitive}
-  TypeIdentifier.BoolType = <boolean> {case-insensitive}
+//  TypeIdentifier.IntType = <integer> {case-insensitive}
+//  TypeIdentifier.BoolType = <boolean> {case-insensitive}
    
   TypeIdentifier.TypeId = Identifier
   
@@ -382,11 +382,12 @@ context-free syntax
   Identifier = <else> {reject,case-insensitive}
   Identifier = <case> {reject,case-insensitive}
   Identifier = <of> {reject,case-insensitive}
-  Identifier = <integer> {reject,case-insensitive}
-  Identifier = <boolean> {reject,case-insensitive}
   Identifier = <true> {reject,case-insensitive}
   Identifier = <false> {reject,case-insensitive}
   Identifier = <not> {reject,case-insensitive}
+  
+//  Identifier = <integer> {reject,case-insensitive}
+//  Identifier = <boolean> {reject,case-insensitive}
   
 context-free syntax
   
