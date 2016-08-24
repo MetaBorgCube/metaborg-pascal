@@ -164,18 +164,15 @@ rules // procedure and function definitions
      Var{x} <- s, Var{x} : ty, [[ t ^ (s) : ty ]].
      // todo: generalize to list of variables 
           
-  [[ PackedArraySchema(bss, t) ^ (s) : ArrayT(ty) ]] := 
-     Map[[ bss ^ (s) : tys ]], 
-     [[ t ^ (s) : ty ]].
+  [[ PackedArraySchema(bss, t) ^ (s) : ArrayT(tys, ty) ]] := 
+     MapTs[[ bss ^ (s) : tys ]], [[ t ^ (s) : ty ]].
+     
+  [[ UnpackedArraySchema(bss, t) ^ (s) : ArrayT(tys, ty) ]] := 
+     MapTs[[ bss ^ (s) : tys ]], [[ t ^ (s) : ty ]].
+     // todo: what to do with bounds
      
   [[ SubrangeType(c1, c2) ^ (s) : IntT() ]] :=
      [[ c1 ^ (s) : IntT() ]], [[ c2 ^ (s) : IntT() ]].
-     
-  [[ UnpackedArraySchema(bss, t) ^ (s) : ArrayT(ty) ]] := 
-     //Map[[ bss ^ (s) ]], 
-     [[ t ^ (s) : ty ]].
-     // todo: how to represent semantic types?
-     // todo: what to do with bounds
      
   [[ BoundSpec(lo, hi, t) ^ (s) ]] := 
      [[ t ^ (s) : ty ]]. 
