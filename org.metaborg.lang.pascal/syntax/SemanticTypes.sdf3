@@ -1,0 +1,21 @@
+module SemanticTypes
+
+context-free syntax
+
+  SemType.IntT = <integer>
+  SemType.RealT = <real>
+  SemType.BoolT = <boolean>
+  SemType.StringT = <string>
+  SemType.FunT = <function(<{SemType ","}*>)<SemType>>
+  SemType.ProcT = <procedure(<{SemType ","}*>)>
+  SemType.ArrayT = <array <{SemType ","}*> of <SemType>>
+  SemType.PointerT = <pointer of <SemType>>
+  SemType.FileT = <file of <SemType>>
+  SemType.SetT = <set of <SemType>>
+  //SemType.RecordT(scope) = <>
+  //SemType.SubrangeT(Constant, Constant) = <>
+  //SemType.EnumT(scope) = <enum <Scope>>
+  
+      
+//     //Type(occurrence)
+//     NilT()
