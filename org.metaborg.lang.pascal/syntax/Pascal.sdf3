@@ -116,11 +116,13 @@ context-free syntax // Procedure and Function Definitions
     <(<{FormalParameter "; "}+>)>
     
   FormalParameter.ValueParams =
-    <<{Identifier ", "}+> : <ParameterType>>
+    <<{VarId ", "}+> : <ParameterType>>
 
   FormalParameter.VarParams =
-    <var <{Identifier ", "}+> : <ParameterType>> {case-insensitive}
+    <var <{VarId ", "}+> : <ParameterType>> {case-insensitive}
 
+  VarId.VarId = Identifier
+  
   FormalParameter = ProcedureHeading
   FormalParameter = FunctionHeading
 
