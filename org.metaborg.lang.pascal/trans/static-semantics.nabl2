@@ -360,14 +360,5 @@ rules // constants
   [[ Int(_)  ^ (s) : IntT()  ]] := true.
   [[ Real(_) ^ (s) : RealT() ]] := true.
   
-rules // auxiliary
 
-  Map[[ [] ^ (s) ]] := true.   
-  Map[[ [ x | xs ] ^ (s) ]] := [[ x ^ (s) ]], Map[[ xs ^ (s) ]].
-   
-  MapT[[ [] ^ (s) : ty ]] := true.   
-  MapT[[ [ x | xs ] ^ (s) : ty ]] := [[ x ^ (s) : ty ]], MapT[[ xs ^ (s) : ty ]].
-   
-  MapTs[[ [] ^ (s) : TNil() ]] := true.   
-  MapTs[[ [ x | xs ] ^ (s) : TCons(ty, tys) ]] := [[ x ^ (s) : ty ]], MapTs[[ xs ^ (s) : tys ]].
    
