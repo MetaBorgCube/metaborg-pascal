@@ -3,12 +3,12 @@ module pascal-static-semantics
 language Pascal
 start symbol Program
 
-test variable reference [[
+test variable reference [[ 
   program example0 () ;
   var
     [[x]] : boolean;
   begin
-    [[x]] := true
+    x := [[x]]
   end.
 ]] resolve #2 to #1
 
