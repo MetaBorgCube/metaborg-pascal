@@ -57,32 +57,44 @@ rules
     
     Var{"eof"} <- s, Var{"eof"} : BoolT(),
     
-    Proc{"writeln"} <- s, Proc{"writeln"} : ProcT([StringT()]),
-    Proc{"readln"}  <- s, Proc{"readln"}  : ProcT([PointerT(StringT())]),
+    Type{"integer"} <- s, Type{"integer"} : IntT(),
+    Type{"boolean"} <- s, Type{"boolean"} : BoolT(),
     
-    Op{ADD()}  <- s, Op{ADD()}  : FunT([IntT(), IntT()], IntT()),    
-    Op{MIN()}  <- s, Op{MIN()}  : FunT([IntT(), IntT()], IntT()),   
-    Op{MUL()}  <- s, Op{MUL()}  : FunT([IntT(), IntT()], IntT()),  
-    Op{DIV()}  <- s, Op{DIV()}  : FunT([IntT(), IntT()], IntT()),  
-    Op{IDIV()} <- s, Op{IDIV()} : FunT([IntT(), IntT()], IntT()),  
-    Op{MOD()}  <- s, Op{MOD()}  : FunT([IntT(), IntT()], IntT()), 
+    Proc{"writeln"} <- s, Proc{"writeln"} : ProcT(TCons(StringT(), TNil())),
+    Proc{"readln"}  <- s, Proc{"readln"}  : ProcT(TCons(StringT(), TNil())),
     
-    Op{EQ()}   <- s, Op{EQ()}   : FunT([IntT(), IntT()], BoolT()),
-    Op{NEQ()}  <- s, Op{NEQ()}  : FunT([IntT(), IntT()], BoolT()),
-    Op{LT()}   <- s, Op{LT()}   : FunT([IntT(), IntT()], BoolT()),
-    Op{LEQ()}  <- s, Op{LEQ()}  : FunT([IntT(), IntT()], BoolT()),
-    Op{GT()}   <- s, Op{GT()}   : FunT([IntT(), IntT()], BoolT()),
-    Op{GEQ()}  <- s, Op{GEQ()}  : FunT([IntT(), IntT()], BoolT()),
+    //intOp  == FunT(TCons(IntT(),  TCons(IntT(),  TNil())), IntT()),
+    //compOp == FunT(TCons(IntT(),  TCons(IntT(),  TNil())), BoolT()),
+    //relOp  == FunT(TCons(BoolT(), TCons(BoolT(), TNil())), BoolT()),
     
-    Op{IN()}   <- s, Op{IN()}   : FunT([ty, SetT(ty)], BoolT()), // correct?
+    Op{ADD()}  <- s, Op{ADD()}  : FunT(TCons(IntT(),  TCons(IntT(),  TNil())), IntT()),    
+    Op{MIN()}  <- s, Op{MIN()}  : FunT(TCons(IntT(),  TCons(IntT(),  TNil())), IntT()),   
+    Op{MUL()}  <- s, Op{MUL()}  : FunT(TCons(IntT(),  TCons(IntT(),  TNil())), IntT()),  
+    Op{DIV()}  <- s, Op{DIV()}  : FunT(TCons(IntT(),  TCons(IntT(),  TNil())), IntT()),  
+    Op{IDIV()} <- s, Op{IDIV()} : FunT(TCons(IntT(),  TCons(IntT(),  TNil())), IntT()),  
+    Op{MOD()}  <- s, Op{MOD()}  : FunT(TCons(IntT(),  TCons(IntT(),  TNil())), IntT()), 
     
-    Op{OR()}   <- s, Op{OR()}   : FunT([BoolT(), BoolT()], BoolT()),
-    Op{AND()}  <- s, Op{AND()}  : FunT([BoolT(), BoolT()], BoolT()).
+    Op{EQ()}   <- s, Op{EQ()}   : FunT(TCons(IntT(),  TCons(IntT(),  TNil())), BoolT()),
+    Op{NEQ()}  <- s, Op{NEQ()}  : FunT(TCons(IntT(),  TCons(IntT(),  TNil())), BoolT()),
+    Op{LT()}   <- s, Op{LT()}   : FunT(TCons(IntT(),  TCons(IntT(),  TNil())), BoolT()),
+    Op{LEQ()}  <- s, Op{LEQ()}  : FunT(TCons(IntT(),  TCons(IntT(),  TNil())), BoolT()),
+    Op{GT()}   <- s, Op{GT()}   : FunT(TCons(IntT(),  TCons(IntT(),  TNil())), BoolT()),
+    Op{GEQ()}  <- s, Op{GEQ()}  : FunT(TCons(IntT(),  TCons(IntT(),  TNil())), BoolT()),
+    
+    Op{IN()}   <- s, Op{IN()}   : FunT(TCons(ty, TCons(SetT(ty), TNil())), BoolT()), 
+                                  // correct?
+                                    
+    Op{OR()}   <- s, Op{OR()}   : FunT(TCons(BoolT(), TCons(BoolT(), TNil())), BoolT()),
+    Op{AND()}  <- s, Op{AND()}  : FunT(TCons(BoolT(), TCons(BoolT(), TNil())), BoolT()).
 
 rules
 
   [[ Program(h, b) ^ (s) ]] :=
-    [[ b ^ (s) ]].
+    new s', s' -P-> s, 
+    [[ h ^ (s) ]], [[ b ^ (s') ]].
+    
+  [[ ProgramHeading(name, _) ^ (s) ]] :=
+     Program{name} <- s.
     
   [[ Block(lds, cds, tds, vds, pfds, stms, _) ^ (s) ]] := 
      [[ lds ^ (s) ]],
@@ -250,21 +262,29 @@ rules // expressions
   [[ NilE() ^ (s) : NilT() ]] := 
      false | error "what do do with nil?".
   
-  [[ Not(e) ^ (s) : BoolT() ]] := [[ e ^ (s) : BoolT() ]].
+  [[ Not(e) ^ (s) : BoolT() ]] := 
+     [[ e ^ (s) : BoolT() ]].
   
-  [[ Sign(_, e) ^ (s) : IntT() ]] := [[ e ^ (s) : IntT() ]]. // todo: ? 
+  [[ Sign(_, e) ^ (s) : IntT() ]] := 
+     [[ e ^ (s) : IntT() ]]. // todo: ? 
   
-  [[ RelOp(e1, op, e2) ^ (s) : BoolT() ]] :=
-     Op[[ op ^ (s) : FunT([ty1, ty2], ty) ]],
-     [[ e1 ^ (s) : ty1 ]], [[ e2 ^ (s) : ty2 ]].  
+  [[ RelOp(e1, op, e2) ^ (s) : ty ]] :=
+     Op[[ op ^ (s) : FunT(TCons(ty1, TCons(ty2, TNil())), ty) ]],
+     [[ e1 ^ (s) : ty_e1 ]], [[ e2 ^ (s) : ty_e2 ]],
+     ty1 == ty_e1 | error $[[ty1] expected] @ e1,
+     ty2 == ty_e2 | error $[[ty2] expected] @ e2. 
        
-  [[ AddOp(e1, op, e2) ^ (s) : IntT() ]] :=
-     Op[[ op ^ (s) : FunT([ty1, ty2], ty) ]],
-     [[ e1 ^ (s) : ty1 ]], [[ e2 ^ (s) : ty2 ]]. 
+  [[ AddOp(e1, op, e2) ^ (s) : ty ]] :=
+     Op[[ op ^ (s) : FunT(TCons(ty1, TCons(ty2, TNil())), ty) ]],
+     [[ e1 ^ (s) : ty_e1 ]], [[ e2 ^ (s) : ty_e2 ]],
+     ty1 == ty_e1 | error $[[ty1] expected] @ e1,
+     ty2 == ty_e2 | error $[[ty2] expected] @ e2.
      
   [[ MulOp(e1, op, e2) ^ (s) : ty ]] :=
-     Op[[ op ^ (s) : FunT([ty1, ty2], ty) ]],
-     [[ e1 ^ (s) : ty1 ]], [[ e2 ^ (s) : ty2 ]]. 
+     Op[[ op ^ (s) : FunT(TCons(ty1, TCons(ty2, TNil())), ty) ]],
+     [[ e1 ^ (s) : ty_e1 ]], [[ e2 ^ (s) : ty_e2 ]],
+     ty1 == ty_e1 | error $[[ty1] expected] @ e1,
+     ty2 == ty_e2 | error $[[ty2] expected] @ e2. 
      
   Op[[ op ^ (s) : ty ]] :=
     Op{op} -> s, Op{op} |-> d, d : ty.
