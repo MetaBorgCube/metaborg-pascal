@@ -6,6 +6,8 @@ imports
   pp
   outline
   analysis
+  
+  nabl-lib
 
 imports
 
@@ -29,7 +31,6 @@ imports
   nabl2/runtime/pp
   
 signature 
-
   types
      IntT() 
      RealT() 
@@ -45,11 +46,8 @@ signature
      RecordT(scope)
      SubrangeT(Constant, Constant)
      EnumT(scope)
-     
-     TNil()
-     TCons(type, type)
-     
-     Type(occurrence)
+         
+     //Type(occurrence)
      NilT()
 
 rules
