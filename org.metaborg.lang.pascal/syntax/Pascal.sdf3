@@ -21,7 +21,8 @@ context-free syntax // Programs and Blocks
     <{ProcedureOrFunctionDeclaration "\n\n"}*>
     
     begin  
-      <{Statement ";\n"}*>
+      <{Statement ";\n"}*>     
+      <Term?>
     end
   > {case-insensitive} 
    
@@ -147,8 +148,8 @@ context-free syntax // Statements
     <<Label> : <Statement>>
     // should probably not be another labeled statement
     
-  Statement.Term =
-    <<Statement>;>
+  Term.Term =
+    <;> // optional empty statement
 
   Statement.Assign =
     <<Variable> := <Expression>>
@@ -162,6 +163,7 @@ context-free syntax // Statements
   Statement.Compound = <
     begin 
       <{Statement ";\n"}+> 
+      <Term?>
     end
   > {case-insensitive}
   
