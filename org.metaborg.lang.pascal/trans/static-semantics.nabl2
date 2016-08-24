@@ -321,32 +321,29 @@ rules // types
 
   // type equality: nominal or structural?
   
-  [[ IntType()  ^ (s) : IntT()  ]] := true.
+  // [[ IntType()  ^ (s) : IntT()  ]] := true.
   
-  [[ BoolType() ^ (s) : BoolT() ]] := true.
+  // [[ BoolType() ^ (s) : BoolT() ]] := true.
 
-  [[ TypeId(x) ^ (s) : Type(d) ]] := 
-     Type{x} -> s, Type{x} |-> d.
+  [[ TypeId(x) ^ (s) : ty ]] := 
+     Type{x} -> s, Type{x} |-> d, d : ty.
   
   [[ EnumType(xs) ^ (s) : EnumT(s') ]] := 
-    new s', false | note "EnumType not implemented".
+     new s', false | note "EnumType not implemented".
     
-  [[ SubrangeType(c1, c2) ^ (s) : SubrangeT(ty1, ty2) ]] :=
-    false | note "SubrangeType type not implemented".    
-    //[[ c1 ^ (s) : ty1 ]], [[ c2 ^ (s) : ty2 ]].
+  [[ SubrangeType(c1, c2) ^ (s) : SubrangeT(c1, c2) ]] :=
+     [[ c1 ^ (s) : IntT() ]], [[ c2 ^ (s) : IntT() ]].
     
   [[ Packed(t) ^ (s) : ty ]] :=
-    false | note "Packed type not implemented".    
+     false | note "Packed type not implemented".    
     
-//  [[ ArrayType(ts, t) ^ (s) : ArrayT(tys, ty) ]] :=
-//    MapTs[[ ts ^ (s) : tys ]], [[ t ^ (s) : ty ]].
-    
-  // ignoring subranges for now
-  [[ ArrayType(ts, t) ^ (s) : ArrayT(ty) ]] :=
-    [[ t ^ (s) : ty ]].
+  [[ ArrayType(ts, t) ^ (s) : ArrayT(tys, ty) ]] :=
+     MapTs[[ ts ^ (s) : tys ]], [[ t ^ (s) : ty ]].
 
   [[ SetType(t)     ^ (s) : SetT(ty)     ]] := [[ t ^ (s) : ty ]].    
-  [[ FileType(t)    ^ (s) : FileT(ty)    ]] := [[ t ^ (s) : ty ]].    
+  
+  [[ FileType(t)    ^ (s) : FileT(ty)    ]] := [[ t ^ (s) : ty ]].   
+   
   [[ PointerType(t) ^ (s) : PointerT(ty) ]] := [[ t ^ (s) : ty ]].
          
 rules // record types
