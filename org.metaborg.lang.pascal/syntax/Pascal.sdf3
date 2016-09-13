@@ -14,27 +14,23 @@ context-free syntax // Programs and Blocks
   > {case-insensitive}
 
   Block.Block = <
-    <LabelDeclarations>
-    <ConstantDefinitions>
-    <TypeDefinitions>
-    <VariableDeclarations>
+    <LabelDeclarations?>
+    <ConstantDefinitions?>
+    <TypeDefinitions?>
+    <VariableDeclarations?>
     
     <{ProcedureOrFunctionDeclaration "\n\n"}*>
     
     begin  
       <{Statement ";\n"}*>     
-      <Term>
+      <Term?>
     end
   > {case-insensitive} 
-   
-  LabelDeclarations.NoLabelDecls = <>
 
   LabelDeclarations.LabelDecls = <
     label 
        <{Label ", "}+>;
   > {case-insensitive}
-
-  ConstantDefinitions.NoConstDefs = <>
   
   ConstantDefinitions.ConstDefs = <
     const 
@@ -43,8 +39,6 @@ context-free syntax // Programs and Blocks
 
   ConstantDefinition.ConstDef =
     <<Identifier> = <Constant>;>
-
-  TypeDefinitions.NoTypeDefs = <>
   
   TypeDefinitions.TypeDefs = <
     type 
@@ -53,8 +47,6 @@ context-free syntax // Programs and Blocks
 
   TypeDefinition.TypeDef =
     <<Identifier> = <Type>;>
-
-  VariableDeclarations.NoVarDecls = <>
   
   VariableDeclarations.VarDecls = <
     var 
@@ -111,8 +103,6 @@ context-free syntax // Procedure and Function Definitions
 
   FunctionIdentification.FuncId =
     <function <Identifier>> {case-insensitive}
-
-//  FormalParameters.NoParams = <>
   
   FormalParameters.Params =
     <(<{FormalParameter "; "}+>)>
@@ -150,7 +140,7 @@ context-free syntax // Statements
     // should probably not be another labeled statement
     
   // optional empty statement at end of block
-  Term.NoTerm = <>
+  //  Term.NoTerm = <>
   Term.Term   = <;> 
 
   Statement.Assign =
@@ -165,7 +155,7 @@ context-free syntax // Statements
   Statement.Compound = <
     begin 
       <{Statement ";\n"}+> 
-      <Term>
+      <Term?>
     end
   > {case-insensitive}
   
@@ -215,8 +205,6 @@ context-free syntax // Statements
   > {case-insensitive}
   
 context-free syntax // parameters
-
-  //ActualParameters.NoParams = <>
   
   ActualParameters.Params = <(<{Expression ", "}*>)>
 
@@ -269,7 +257,7 @@ context-free syntax // variables
   Variable.Ref = Identifier
 
   Variable.IndexVar = 
-    <<Variable> [<{Expression ", "}*>]>
+    <<Variable>[<{Expression ", "}*>]>
     
   Variable.FieldDes = 
     <<Variable>.<Identifier>>
@@ -287,9 +275,6 @@ context-free syntax // Types
 
   Type = SimpleType 
   Type = TypeIdentifier
-  
-//  TypeIdentifier.IntType = <integer> {case-insensitive}
-//  TypeIdentifier.BoolType = <boolean> {case-insensitive}
    
   TypeIdentifier.TypeId = Identifier
   
@@ -369,25 +354,22 @@ lexical restrictions
 
 context-free syntax
 
-  Identifier = <program> {reject,case-insensitive}
-  Identifier = <var> {reject,case-insensitive}
-  Identifier = <type> {reject,case-insensitive}
-  Identifier = <const> {reject,case-insensitive}
-  Identifier = <function> {reject,case-insensitive}
+  Identifier = <program>   {reject,case-insensitive}
+  Identifier = <var>       {reject,case-insensitive}
+  Identifier = <type>      {reject,case-insensitive}
+  Identifier = <const>     {reject,case-insensitive}
+  Identifier = <function>  {reject,case-insensitive}
   Identifier = <procedure> {reject,case-insensitive}
-  Identifier = <begin> {reject,case-insensitive}
-  Identifier = <end> {reject,case-insensitive}
-  Identifier = <if> {reject,case-insensitive}
-  Identifier = <then> {reject,case-insensitive}
-  Identifier = <else> {reject,case-insensitive}
-  Identifier = <case> {reject,case-insensitive}
-  Identifier = <of> {reject,case-insensitive}
-  Identifier = <true> {reject,case-insensitive}
-  Identifier = <false> {reject,case-insensitive}
-  Identifier = <not> {reject,case-insensitive}
-  
-//  Identifier = <integer> {reject,case-insensitive}
-//  Identifier = <boolean> {reject,case-insensitive}
+  Identifier = <begin>     {reject,case-insensitive}
+  Identifier = <end>       {reject,case-insensitive}
+  Identifier = <if>        {reject,case-insensitive}
+  Identifier = <then>      {reject,case-insensitive}
+  Identifier = <else>      {reject,case-insensitive}
+  Identifier = <case>      {reject,case-insensitive}
+  Identifier = <of>        {reject,case-insensitive}
+  Identifier = <true>      {reject,case-insensitive}
+  Identifier = <false>     {reject,case-insensitive}
+  Identifier = <not>       {reject,case-insensitive}
   
 context-free syntax
   
