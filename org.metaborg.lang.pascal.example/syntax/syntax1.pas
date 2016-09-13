@@ -1,9 +1,7 @@
 program Sort();
-procedure f(x : integer);
+procedure f(var x : boolean);
   begin 
-    x := 1 
+    x := true and false
   end;
 begin 
 end.
-
-

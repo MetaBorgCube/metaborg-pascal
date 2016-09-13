@@ -17,7 +17,7 @@ program Sort(input, output);
         arr: IntArrType;
 
     { Read in the integers. }
-    procedure ReadArr(var size: Integer; var a: IntArrType);
+    procedure ReadArr(var size: integer; var a: IntArrType);
         begin
             size := 1;
             while not eof do begin

@@ -1,7 +1,7 @@
 program Sort();
-procedure f(var x : boolean);
+procedure f(var x : boolean); 
   begin 
     x := 1 { error }
-  end;
+  end;  
 begin 
-end.
+end. 
