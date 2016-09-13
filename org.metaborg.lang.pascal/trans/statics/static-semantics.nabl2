@@ -1,56 +1,20 @@
 module static-semantics
 
+imports
+
+  nabl2shared
+  nabl2runtime 
+  
 imports 
   signatures/- 
   completion
   pp
   outline
   analysis
-  
   nabl-lib
-
-imports
-
-  nabl2shared
-  signatures/nabl2/shared/common/-
-  signatures/nabl2/shared/constraints/-
-
-  pp/nabl2/shared/common/-
-  pp/nabl2/shared/constraints/-
-
-  nabl2/shared/-
-
-imports
-
-  nabl2runtime 
-  nabl2/runtime/analysis/-
-  nabl2/runtime/common/-
-  nabl2/runtime/editor/-
-  nabl2/runtime/solver/-
-  nabl2/runtime/stdlib/-
-  nabl2/runtime/pp
-  
-signature 
   types
-     IntT() 
-     RealT() 
-     BoolT()
-     StringT()
-     FunT(List(type), type) 
-     ProcT(List(type))
-     ArrayT(type)
-     ArrayT(List(type), type)
-     PointerT(type)
-     FileT(type)
-     SetT(type)
-     RecordT(scope)
-     SubrangeT(Constant, Constant)
-     EnumT(scope)
-         
-     //Type(occurrence)
-     NilT()
 
-rules
+rules // run-time library (=> define separately?)
 
   init ^ (s) := 
     new s,
@@ -60,32 +24,28 @@ rules
     Type{"integer"} <- s, Type{"integer"} : IntT(),
     Type{"boolean"} <- s, Type{"boolean"} : BoolT(),
     
-    Proc{"writeln"} <- s, Proc{"writeln"} : ProcT(TCons(StringT(), TNil())),
-    Proc{"readln"}  <- s, Proc{"readln"}  : ProcT(TCons(StringT(), TNil())),
+    Proc{"writeln"} <- s, Proc{"writeln"} : ProcT([StringT()]),
+    Proc{"readln"}  <- s, Proc{"readln"}  : ProcT([StringT()]),
+     
+    Op{ADD()}  <- s, Op{ADD()}  : FunT([IntT(), IntT()], IntT()),    
+    Op{MIN()}  <- s, Op{MIN()}  : FunT([IntT(), IntT()], IntT()),     
+    Op{MUL()}  <- s, Op{MUL()}  : FunT([IntT(), IntT()], IntT()),    
+    Op{DIV()}  <- s, Op{DIV()}  : FunT([IntT(), IntT()], IntT()), 
+    Op{IDIV()} <- s, Op{IDIV()} : FunT([IntT(), IntT()], IntT()), 
+    Op{MOD()}  <- s, Op{MOD()}  : FunT([IntT(), IntT()], IntT()), 
     
-    //intOp  == FunT(TCons(IntT(),  TCons(IntT(),  TNil())), IntT()),
-    //compOp == FunT(TCons(IntT(),  TCons(IntT(),  TNil())), BoolT()),
-    //relOp  == FunT(TCons(BoolT(), TCons(BoolT(), TNil())), BoolT()),
+    Op{EQ()}   <- s, Op{EQ()}   : FunT([IntT(), IntT()], BoolT()), 
+    Op{NEQ()}  <- s, Op{NEQ()}  : FunT([IntT(), IntT()], BoolT()), 
+    Op{LT()}   <- s, Op{LT()}   : FunT([IntT(), IntT()], BoolT()), 
+    Op{LEQ()}  <- s, Op{LEQ()}  : FunT([IntT(), IntT()], BoolT()), 
+    Op{GT()}   <- s, Op{GT()}   : FunT([IntT(), IntT()], BoolT()), 
+    Op{GEQ()}  <- s, Op{GEQ()}  : FunT([IntT(), IntT()], BoolT()), 
     
-    Op{ADD()}  <- s, Op{ADD()}  : FunT(TCons(IntT(),  TCons(IntT(),  TNil())), IntT()),    
-    Op{MIN()}  <- s, Op{MIN()}  : FunT(TCons(IntT(),  TCons(IntT(),  TNil())), IntT()),   
-    Op{MUL()}  <- s, Op{MUL()}  : FunT(TCons(IntT(),  TCons(IntT(),  TNil())), IntT()),  
-    Op{DIV()}  <- s, Op{DIV()}  : FunT(TCons(IntT(),  TCons(IntT(),  TNil())), IntT()),  
-    Op{IDIV()} <- s, Op{IDIV()} : FunT(TCons(IntT(),  TCons(IntT(),  TNil())), IntT()),  
-    Op{MOD()}  <- s, Op{MOD()}  : FunT(TCons(IntT(),  TCons(IntT(),  TNil())), IntT()), 
-    
-    Op{EQ()}   <- s, Op{EQ()}   : FunT(TCons(IntT(),  TCons(IntT(),  TNil())), BoolT()),
-    Op{NEQ()}  <- s, Op{NEQ()}  : FunT(TCons(IntT(),  TCons(IntT(),  TNil())), BoolT()),
-    Op{LT()}   <- s, Op{LT()}   : FunT(TCons(IntT(),  TCons(IntT(),  TNil())), BoolT()),
-    Op{LEQ()}  <- s, Op{LEQ()}  : FunT(TCons(IntT(),  TCons(IntT(),  TNil())), BoolT()),
-    Op{GT()}   <- s, Op{GT()}   : FunT(TCons(IntT(),  TCons(IntT(),  TNil())), BoolT()),
-    Op{GEQ()}  <- s, Op{GEQ()}  : FunT(TCons(IntT(),  TCons(IntT(),  TNil())), BoolT()),
-    
-    Op{IN()}   <- s, Op{IN()}   : FunT(TCons(ty, TCons(SetT(ty), TNil())), BoolT()), 
+    Op{IN()}   <- s, Op{IN()}   : FunT([ty, SetT(ty)], BoolT()), 
                                   // correct?
                                     
-    Op{OR()}   <- s, Op{OR()}   : FunT(TCons(BoolT(), TCons(BoolT(), TNil())), BoolT()),
-    Op{AND()}  <- s, Op{AND()}  : FunT(TCons(BoolT(), TCons(BoolT(), TNil())), BoolT()).
+    Op{OR()}   <- s, Op{OR()}   : FunT([BoolT(), BoolT()], BoolT()), 
+    Op{AND()}  <- s, Op{AND()}  : FunT([BoolT(), BoolT()], BoolT()), 
 
 rules
 
@@ -104,18 +64,18 @@ rules
      Map[[ pfds ^ (s) ]],
      Map[[ stms ^ (s) ]].
      
-  [[ NoLabelDecls() ^ (s) ]] := true.  
+//  [[ NoLabelDecls() ^ (s) ]] := true.  
   [[ LabelDecls(_)  ^ (s) ]] := false | note "label declarations not implemented".
   
-  [[ NoConstDefs()  ^ (s) ]] := true.  
+//  [[ NoConstDefs()  ^ (s) ]] := true.  
   [[ ConstDefs(cds) ^ (s) ]] := Map[[ cds ^ (s) ]].  
-  [[ ConstDef(x, c) ^ (s) ]] := Const{x} <- s, [[ c ^ (s) : ty ]], Const{x} : ty.
+  [[ ConstDef(x, c) ^ (s) ]] := Var{x} <- s, [[ c ^ (s) : ty ]], Var{x} : ty.
      
-  [[ NoTypeDefs()  ^ (s) ]] := true. 
+//  [[ NoTypeDefs()  ^ (s) ]] := true. 
   [[ TypeDefs(tds) ^ (s) ]] := Map[[ tds ^ (s) ]].
   [[ TypeDef(x, t) ^ (s) ]] := Type{x} <- s, [[ t ^ (s) : ty ]], Type{x} : ty.
   
-  [[ NoVarDecls()   ^ (s) ]] := true.
+//  [[ NoVarDecls()   ^ (s) ]] := true.
   [[ VarDecls(vds)  ^ (s) ]] := Map[[ vds ^ (s) ]].
   [[ VarDecl(xs, t) ^ (s) ]] := [[ t ^ (s) : ty]], MapT[[ xs ^ (s) : ty ]].
   [[ VarId(x) ^ (s) : ty ]] := Var{x} <- s, Var{x} : ty.
@@ -141,11 +101,11 @@ rules
 rules // procedure and function definitions
 
   [[ ProcHeading(f, params) ^ (s_par, s) ]] := 
-     [[ params ^ (s) : tys]],
+     [[ params ^ (s) : tys ]],
      Proc{f} <- s_par, Proc{f} : ProcT(tys).
      
   [[ FuncHeading(f, params, t) ^ (s_par, s) ]] := 
-     [[ params ^ (s) : tys]], 
+     [[ params ^ (s) : tys ]], 
      Func{f} <- s_par, Func{f} : FunT(tys, ty), 
      [[ t ^ (s) : ty ]], Var{f} <- s, Var{f} : ty. // return variable and type
      
@@ -157,12 +117,18 @@ rules // procedure and function definitions
   [[ Params(params) ^ (s) : tys ]] := MapTs[[ params ^ (s) : tys]].
   
   [[ ValueParams([VarId(x)], t) ^ (s) : ty ]] := 
-     Var{x} <- s, Var{x} : ty.
+     Var{x} <- s, Var{x} : ty, [[ t ^ (s) : ty ]].
      // todo: generalize to list of variables 
      
   [[ VarParams([VarId(x)], t) ^ (s) : ty ]] := 
      Var{x} <- s, Var{x} : ty, [[ t ^ (s) : ty ]].
      // todo: generalize to list of variables 
+     
+  [[ VarParams(xs, t) ^ (s) : tys ]] := 
+     [[ t ^ (s) : ty ]], MapTs[[ xs ^ (ty, s) : tys ]].
+     
+  [[ VarId(x) ^ (ty, s) : [ty] ]] :=
+     Var{x} <- s, Var{x} : ty, [[ t ^ (s) : ty ]].
           
   [[ PackedArraySchema(bss, t) ^ (s) : ArrayT(tys, ty) ]] := 
      MapTs[[ bss ^ (s) : tys ]], [[ t ^ (s) : ty ]].
@@ -265,19 +231,19 @@ rules // expressions
      [[ e ^ (s) : IntT() ]]. // todo: ? 
   
   [[ RelOp(e1, op, e2) ^ (s) : ty ]] :=
-     Op[[ op ^ (s) : FunT(TCons(ty1, TCons(ty2, TNil())), ty) ]],
+     Op[[ op ^ (s) : FunT([ty1, ty2], ty) ]],
      [[ e1 ^ (s) : ty_e1 ]], [[ e2 ^ (s) : ty_e2 ]],
      ty1 == ty_e1 | error $[[ty1] expected] @ e1,
      ty2 == ty_e2 | error $[[ty2] expected] @ e2. 
        
   [[ AddOp(e1, op, e2) ^ (s) : ty ]] :=
-     Op[[ op ^ (s) : FunT(TCons(ty1, TCons(ty2, TNil())), ty) ]],
+     Op[[ op ^ (s) : FunT([ty1, ty2], ty) ]],
      [[ e1 ^ (s) : ty_e1 ]], [[ e2 ^ (s) : ty_e2 ]],
      ty1 == ty_e1 | error $[[ty1] expected] @ e1,
      ty2 == ty_e2 | error $[[ty2] expected] @ e2.
      
   [[ MulOp(e1, op, e2) ^ (s) : ty ]] :=
-     Op[[ op ^ (s) : FunT(TCons(ty1, TCons(ty2, TNil())), ty) ]],
+     Op[[ op ^ (s) : FunT([ty1, ty2], ty) ]],
      [[ e1 ^ (s) : ty_e1 ]], [[ e2 ^ (s) : ty_e2 ]],
      ty1 == ty_e1 | error $[[ty1] expected] @ e1,
      ty2 == ty_e2 | error $[[ty2] expected] @ e2. 
@@ -290,10 +256,17 @@ rules // variables
   [[ Ref(x) ^ (s) : ty ]] :=
      Var{x} -> s, Var{x} |-> d, d : ty.
      
-  //[[ Ref(x) ^ (s) : ty ]] :=
-  //   (Var{x} -> s, Var{x} |-> d;
-  //   Const{x} -> s, Const{x} |-> d), d : ty.
-      
+//  [[ Ref(x) ^ (s) : ty ]] :=
+//     Var{x} -> s, Var{x} |-> d, d : ty. 
+//
+//     
+//  [[ Ref(x) ^ (s) : ty ]] :=
+//     Var{x} -> s, Var{x} |-> d, d : ty;  
+//     Const{x} -> s, Const{x} |-> d, d : ty.   
+//
+//  [[ Ref(x) ^ (s) : ty ]] :=
+//     ns{x} -> s, ns{x} |-> d, d : ty, (ns == Const; ns == Var). 
+         
      // todo: identifier can also be other things: function, procedure, ...
      
   [[ IndexVar(v, es) ^ (s) : ty ]] :=
@@ -317,60 +290,10 @@ rules // variables
      Func{x} -> s, Func{x} : FunT(tys, ty),
      [[ params ^ (s) : tys ]].
 
-rules // types
-
-  // type equality: nominal or structural?
-  
-  // [[ IntType()  ^ (s) : IntT()  ]] := true.
-  
-  // [[ BoolType() ^ (s) : BoolT() ]] := true.
-
-  [[ TypeId(x) ^ (s) : ty ]] := 
-     Type{x} -> s, Type{x} |-> d, d : ty.
-  
-  [[ EnumType(xs) ^ (s) : EnumT(s') ]] := 
-     new s', false | note "EnumType not implemented".
-    
-  [[ SubrangeType(c1, c2) ^ (s) : SubrangeT(c1, c2) ]] :=
-     [[ c1 ^ (s) : IntT() ]], [[ c2 ^ (s) : IntT() ]].
-    
-  [[ Packed(t) ^ (s) : ty ]] :=
-     false | note "Packed type not implemented".    
-    
-  [[ ArrayType(ts, t) ^ (s) : ArrayT(tys, ty) ]] :=
-     MapTs[[ ts ^ (s) : tys ]], [[ t ^ (s) : ty ]].
-
-  [[ SetType(t)     ^ (s) : SetT(ty)     ]] := [[ t ^ (s) : ty ]].    
-  
-  [[ FileType(t)    ^ (s) : FileT(ty)    ]] := [[ t ^ (s) : ty ]].   
-   
-  [[ PointerType(t) ^ (s) : PointerT(ty) ]] := [[ t ^ (s) : ty ]].
-         
-rules // record types
-
-  [[ RecordType(fs) ^ (s) : RecordT(s') ]] :=
-     new s', s' -P-> s, [[ fs ^ (s') ]].
-     
-  [[ FieldList(rss) ^ (s) ]] :=
-     Map[[ rss ^ (s) ]].
-     
-  [[ FieldList(rss, variant) ^ (s) ]] :=
-     Map[[ rss ^ (s) ]],
-     false | note "record type with variant not implemented". 
-     
-  [[ RecordSection(xs, t) ^ (s) ]] :=
-     [[ t ^ (s) : ty ]], 
-     MapT[[ xs ^ (s) : ty ]].
-     
-  [[ FieldId(x) ^ (s) : ty ]] := 
-     Field{x} <- s, Field{x} : ty.
-     
-  // todo: variants
-
 rules // constants
 
   [[ ConstId(_, x) ^ (s) : ty ]] := 
-     Const{x} -> s, Const{x} |-> d, d : ty.
+     Var{x} -> s, Var{x} |-> d, d : ty.
      
   [[ Int(_)  ^ (s) : IntT()  ]] := true.
   [[ Real(_) ^ (s) : RealT() ]] := true.

@@ -1,0 +1,93 @@
+module types
+
+signature 
+
+  types
+  
+     RealT() 
+     IntT() 
+     BoolT()
+     StringT()
+     FunT(type, type) 
+     ProcT(type)
+     ArrayT(type)
+     ArrayT(type, type)
+     PointerT(type) 
+     FileT(type)
+     SetT(type)
+     RecordT(scope)
+     SubrangeT(Constant, Constant)
+     EnumT(scope)         
+     NilT()
+     
+//  subtypes
+//  
+//    SetT(t) <! SetT(t') if t <? t'
+
+   
+    
+rules // subtype relation
+
+// move to init rule
+
+//  SubType[[ e ^ (s) ]] := 
+//    IntT() <! IntT()
+//    , IntT() <! RealT()
+//    , Foo(t) <! Bar(t)
+//    , ArrayT(t) <! ArrayT(tys, t)
+//    , SubrangeT(c1, c2) <! IntT()
+////    , SubrangeT(c1, c2) <! SubrangeT(c3, c4)
+////        if c1 >= c3 & c2 <= c4
+//    //, SetT(t) <! SetT(t') if t <? t',
+//  .
+
+rules // types
+
+  // type equality: nominal or structural?
+  
+  // [[ IntType()  ^ (s) : IntT()  ]] := true.
+  
+  // [[ BoolType() ^ (s) : BoolT() ]] := true.
+
+  [[ TypeId(x) ^ (s) : ty ]] := 
+     Type{x} -> s, Type{x} |-> d, d : ty.
+  
+  [[ EnumType(xs) ^ (s) : EnumT(s') ]] := 
+     new s', false | note "EnumType not implemented".
+    
+  [[ SubrangeType(c1, c2) ^ (s) : SubrangeT(c1, c2) ]] :=
+     [[ c1 ^ (s) : IntT() ]], [[ c2 ^ (s) : IntT() ]].
+    
+  [[ Packed(t) ^ (s) : ty ]] :=
+     false | note "Packed type not implemented".    
+    
+  [[ ArrayType(ts, t) ^ (s) : ArrayT(tys, ty) ]] :=
+     MapTs[[ ts ^ (s) : tys ]], [[ t ^ (s) : ty ]].
+
+  [[ SetType(t)     ^ (s) : SetT(ty)     ]] := [[ t ^ (s) : ty ]].    
+  
+  [[ FileType(t)    ^ (s) : FileT(ty)    ]] := [[ t ^ (s) : ty ]].   
+   
+  [[ PointerType(t) ^ (s) : PointerT(ty) ]] := [[ t ^ (s) : ty ]].
+         
+rules // record types
+
+  [[ RecordType(fs) ^ (s) : RecordT(s') ]] :=
+     new s', s' -P-> s, [[ fs ^ (s') ]].
+     
+  [[ FieldList(rss) ^ (s) ]] :=
+     Map[[ rss ^ (s) ]].
+     
+  [[ FieldList(rss, variant) ^ (s) ]] :=
+     Map[[ rss ^ (s) ]],
+     false | note "record type with variant not implemented". 
+     
+  [[ RecordSection(xs, t) ^ (s) ]] :=
+     [[ t ^ (s) : ty ]], 
+     MapT[[ xs ^ (s) : ty ]].
+     
+  [[ FieldId(x) ^ (s) : ty ]] := 
+     Field{x} <- s, Field{x} : ty.
+     
+rules  // todo: variants
+  
