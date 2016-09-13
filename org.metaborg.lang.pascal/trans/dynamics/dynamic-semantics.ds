@@ -14,9 +14,9 @@ signature
     
 rules
 
-   Program(h, b) --> v
-   where b --> v.
-   
-   Block(lbls, cds, tds, vds, pfds, stms) --> v
-   where 
-     vds --> _; stms --> v.
+//   Program(h, b) --> v
+//   where b --> v.
+//   
+//   Block(lbls, cds, tds, vds, pfds, stms) --> v
+//   where 
+//     vds --> _; stms --> v.
