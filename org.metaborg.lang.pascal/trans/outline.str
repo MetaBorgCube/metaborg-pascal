@@ -1,7 +1,7 @@
 module outline
 
 imports
-  
+
   signatures/Pascal-sig
   runtime/editor/outline-library
   runtime/editor/origins
@@ -13,4 +13,26 @@ rules
     where
       outline := <simple-label-outline(to-outline-label)> ast
   
-  to-outline-label = fail
+  to-outline-label : 
+    ProgramHeading(name, _) -> name
+
+  to-outline-label :
+    TypeDefs(_) -> "types"
+    
+  to-outline-label :
+    TypeDef(name, _) -> name
+    
+  to-outline-label :
+    VarDecls(_) -> "variables"
+    
+  to-outline-label :
+    VarId(name) -> name
+    
+  to-outline-label :
+    ConstDefs(_) -> "constants"
+    
+  to-outline-label :
+    ConstDef(name, _) -> name
+  
+  to-outline-label :
+    ProcDecl(ProcHeading(name, _), _) -> name
