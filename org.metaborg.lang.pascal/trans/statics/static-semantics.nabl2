@@ -45,7 +45,7 @@ rules // run-time library (=> define separately?)
                                   // correct?
                                     
     Op{OR()}   <- s, Op{OR()}   : FunT([BoolT(), BoolT()], BoolT()), 
-    Op{AND()}  <- s, Op{AND()}  : FunT([BoolT(), BoolT()], BoolT()), 
+    Op{AND()}  <- s, Op{AND()}  : FunT([BoolT(), BoolT()], BoolT()).
 
 rules
 
