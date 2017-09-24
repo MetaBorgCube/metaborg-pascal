@@ -22,3 +22,7 @@ rules // auxiliary
   MapTs[[ [] ^ (s) : [] ]] := true.   
   MapTs[[ [ x | xs ] ^ (s) : [ty | tys] ]] := 
     [[ x ^ (s) : ty ]], MapTs[[ xs ^ (s) : tys ]].
+    
+  Map2T[[ [] ^ (s, s') : ty ]] := true.
+  Map2T[[ [ x | xs ] ^ (s, s') : ty ]] :=
+  	[[ x ^ (s, s') : ty ]], Map2T[[ xs ^ (s, s') : ty ]].

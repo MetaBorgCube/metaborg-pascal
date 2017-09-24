@@ -3,12 +3,50 @@ module desugar
 imports
   signatures/-
 
+signature
+
+	constructors
+		RecordDef  : Identifier * Type -> TypeDefinition
+		EnumDef  : Identifier * Type -> TypeDefinition
+		FieldList : List(RecordSection) * List(Variants) * Term -> FieldList
+
 strategies
 
   desugar-all = topdown(try(desugar))
   
 rules
 
+  desugar: 
+  	Some(thing) -> thing
+
+  desugar:
+  	Label(stringnum) -> Label(intnum)
+  	where <string-to-int> stringnum => intnum
+  	
+  desugar:
+    Goto(Label(stringnum)) -> Goto(intnum)
+  	where <string-to-int> stringnum => intnum
+  
+  desugar:
+    Labeled(Label(stringnum), stmnt) -> Labeled(intnum, stmnt)	
+  	where <string-to-int> stringnum => intnum
+  
+  desugar:
+    ArrayType([range_outer | range_inner], type) -> ArrayType(range_outer, sub_type)
+    where
+    	<desugar>ArrayType(range_inner,type) => sub_type
+  
+  desugar:
+  	ArrayType([], type) -> type
+  	
+  desugar: 
+  	IndexVar(ref, [position | positions]) -> IndexVar(inner, position)
+  	where
+  		<desugar>IndexVar(ref, positions) => inner
+  		
+  desugar:
+  	IndexVar(ref, []) -> ref
+  
   desugar :
     Params(ps) -> Params(ps')
     where <mapconcat(try(desugar-param))> ps => ps'
@@ -19,6 +57,65 @@ rules
   desugar-param :
     ValueParams(xs, t) -> <map(!ValueParams([<id>], t))> xs
 
+  // Transform procedures to Void function calls
+  
+  desugar :
+  	ProcCall(fun, params) -> FunCall(fun, params)
+  
+  desugar :
+  	ProcDecl(h,b) -> FuncDecl(h', b)
+  	where <desugar-proc-heading> h => h'
+
+  desugar-proc-heading :
+  	ProcHeading(name, params) -> FuncHeading(name, params, TypeId("_void"))
+  
+  // Remove quotationmarks from string
+  
+  desugar :
+  	String(str) -> String(str'')
+  	with
+  		 <un-single-quote> str => str';
+  		 <string-replace(|"''","'")> str' => str''
+
+  desugar : 
+    Char(char) -> Char(char'')
+    with
+    	<un-single-quote> char => char';
+  		 <string-replace(|"''","'")> char' => char''
+  	
+  desugar : 
+  	With([], stm) -> stm
+  
+  desugar : 
+  	With([ rec | recs ], stm) -> With(rec, with)
+  	where
+  		<desugar>With(recs, stm) => with
+  	
+  desugar : 
+  	TypeDef(name, RecordType(fields)) -> RecordDef(name, RecordType(fields))
+  		
+  desugar :
+  	FieldList(records, Some(Optional(variants))) -> fieldlist
+  	where
+  		<desugar>FieldList(records, variants) => fieldlist
+  		
+  desugar : 
+  	FieldList(records, Some(Variants(variants, term))) -> FieldList(records, variants, term)
+  	
+  desugar :
+  	FieldList(records, None()) -> FieldList(records, [], None())
+  	
+  desugar :
+  	FieldList(Some(Variants(variants,term))) -> FieldList([], variants, term)
+  
+  desugar :
+  	FieldList(None()) -> FieldList([], [], None())
+  
+  desugar : 
+    TypeDef(name, EnumType(values)) -> EnumDef(name, EnumType(values))
+  
+  desugar : 
+   If(e, stm) -> IfElse(e,stm, None())
 //  desugar : 
 //    TypeId(str) -> TypeId(<lower-case>str)
 //  

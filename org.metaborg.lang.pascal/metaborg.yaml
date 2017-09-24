@@ -33,3 +33,7 @@ language:
     - stratego-sdf
     - -la
     - strc
+runtime:
+  nabl2:
+    debug: analysis
+    

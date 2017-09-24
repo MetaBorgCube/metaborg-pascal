@@ -3,7 +3,7 @@ module Main
 imports
 
   Syntax
-//  Analysis
+  Analysis
 
 language
 

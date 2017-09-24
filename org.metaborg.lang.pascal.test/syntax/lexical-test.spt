@@ -1,0 +1,391 @@
+module lexical-test
+
+language Pascal
+
+fixture [[
+	program test ();
+	begin
+		writeln([[...]])
+	end.
+]]
+
+
+// INT
+
+
+test number 1 [[
+	1
+]] parse succeeds
+
+test number 9 [[
+	+9
+]] parse succeeds
+
+test negative number [[
+	-345
+]] parse succeeds
+
+test negative number cont. [[
+	-56345
+]] parse succeeds
+
+test large number[[
+	416824894
+]] parse succeeds
+
+test number with zero before[[
+	042
+]] parse succeeds
+
+test number with multiple zero before[[
+	0000057
+]] parse succeeds
+
+// REAL
+
+test real number [[
+	42.0
+]] parse succeeds
+
+test real number cont. [[
+	+345.0
+]] parse succeeds
+
+test real number cont. 2 [[
+	+3.415647
+]] parse succeeds
+
+test real number negative [[
+	-12.0
+]] parse succeeds
+
+test real number scientific sign - [[
+	123.0e-12
+]] parse succeeds
+
+test real number scientific sign + [[
+	123.0e+12
+]] parse succeeds
+
+test real number scientific Capital E [[
+	123.0E+4
+]] parse fails
+
+test real number scientific no sign [[
+	123.0e4
+]] parse succeeds
+
+test real number without floating point [[
+	3234e19
+]] parse succeeds
+
+test real number without floating point sign - [[
+	93784e-12
+]] parse succeeds
+
+test real number without floating point sign + [[
+	18e+1333
+]] parse succeeds
+
+test real number with zeros [[
+	00000487.1
+]] parse succeeds
+
+test real number belown 1 [[
+	0.000000000000000000002
+]] parse succeeds
+
+// STRING
+
+test regular string [[
+	'hello world'
+]] parse succeeds
+	
+test Capslock string [[
+	'HELLO DARKNESS MY OLD FRIEND'
+]] parse succeeds
+
+test string with capital and lowercase [[
+	'Hello World'
+]] parse succeeds
+	
+test double-quote [[
+	"Hello World"
+]] parse fails
+
+test single quote in string [[
+	'Hello world, it''s me'
+]] parse succeeds
+
+test single quote in string [[
+	''''
+]] parse succeeds
+
+test single quote bad [[
+	'it's a mad world'
+]] parse fails
+
+test special symbols [[
+	';'
+]] parse succeeds
+
+test special symbols cont. [[
+	'[ ]'
+]] parse succeeds
+
+
+test empty string [[
+	''
+]] parse succeeds
+
+// Comment
+
+test comment [[
+	{ }
+]] parse succeeds
+
+test comment 2 [[
+	(* *)
+]] parse succeeds
+
+test comment with content [[
+	{ Bye World }
+]] parse succeeds
+
+test comment with content 2 [[
+	(* Bye World *)
+]] parse succeeds
+
+test comment with content 3 [[
+	(* Bye World }
+]] parse succeeds
+
+test comment with content 4 [[
+	{ Bye World *)
+]] parse succeeds
+
+test comment empty comment [[
+	{*)
+]] parse succeeds
+
+test comment empty comment 2 [[
+	(*}
+]] parse succeeds
+
+test comment empty comment 3 [[
+	{}
+]] parse succeeds
+
+test comment empty comment 4 [[
+	(**)
+]] parse succeeds
+
+test somehow valid comment [[
+	(* {) *)
+]] parse succeeds
+
+test faulty comment [[
+	(* (*) *)
+]] parse fails
+
+test comment with open bracket [[
+	{ not { allowed }
+]] parse fails
+
+test comment with alternative open bracket [[
+	(* not (* allowed *)
+]] parse fails
+
+test comment with open bracket 2 [[
+	{ not (* allowed }
+]] parse fails
+
+test comment with alternative open bracket 2 [[
+	(* not { allowed *)
+]] parse fails
+
+test comment with close bracket [[
+	{ not } allowed }
+]] parse fails
+
+test comment with alternative close bracket [[
+	(* not *) allowed *)
+]] parse fails
+
+test comment with close bracket 2 [[
+	{ not *) allowed }
+]] parse fails
+
+test comment with alternative close bracket 2 [[
+	(* not } allowed *)
+]] parse fails
+
+test comment after identifier [[
+	someIdentifier (* some comment *)
+]] parse succeeds
+
+test comment after identifier 2[[
+	someIdentifier { some comment }
+]] parse succeeds
+
+test comment before identifier [[
+	(* some comment *) someIdentifier
+]] parse succeeds
+
+test comment before identifier 2[[
+	{ some comment } someIdentifier
+]] parse succeeds
+
+test comment after integer [[
+	2 (* some comment *)
+]] parse succeeds
+
+test comment after integer 2[[
+	3 { some comment }
+]] parse succeeds
+
+test comment before integer [[
+	(* some comment *) 4
+]] parse succeeds
+
+test comment before integer 2[[
+	{ some comment } 5
+]] parse succeeds
+
+// ID
+
+test one-letter identifier lowercase [[
+	a
+]] parse succeeds
+
+test one-letter identifier uppercase [[
+	I
+]] parse succeeds
+
+test multiple letters identifier lowercase [[
+	sdafasdf
+]] parse succeeds
+
+test multiple letters identifier uppercase [[
+	EVERYTHING
+]] parse succeeds
+
+test multiple letters identifier upper- and lowercase [[
+	SomeBody
+]] parse succeeds
+
+test multiple letters identifier 2 [[
+	onceTold
+]] parse succeeds
+
+test identifier with numbers [[
+	h4llo
+]] parse succeeds
+
+test identifier with multiple numbers [[
+	h4770
+]] parse succeeds
+
+test identifier starting with numbers [[
+	4chan
+]] parse fails
+
+// Identifiers keyword
+
+test program keyword [[
+	program
+]] parse fails
+
+test var keyword [[
+	var
+]] parse fails
+
+test type keyword [[
+	type
+]] parse fails
+
+test const keyword [[
+	const
+]] parse fails
+
+test function keyword [[
+	function
+]] parse fails
+
+test procedure keyword [[
+	procedure
+]] parse fails
+
+test begin keyword [[
+	begin
+]] parse fails
+
+test end keyword [[
+	end
+]] parse fails
+
+test if keyword [[
+	if
+]] parse fails
+
+test then keyword [[
+	then
+]] parse fails
+
+test else keyword [[
+	else
+]] parse fails
+
+test case keyword [[
+	case
+]] parse fails
+
+test of keyword [[
+	of
+]] parse fails
+
+// keywords, but valid as expression
+
+test true keyword [[
+	true
+]] parse succeeds
+
+test false keyword [[
+	false
+]] parse succeeds
+
+// ID not allowed
+
+test id with openBracketSquare [[
+	some[Identifier
+]] parse fails
+
+test id with closeBracketSquare [[
+	some]Identifier
+]] parse fails
+
+test id with lowerstripe [[
+	some_identifier
+]] parse fails
+
+test id with modulo [[
+	some%identifier
+]] parse fails
+
+test id with powersymbo [[
+	some^identifier
+]] parse fails
+
+test id with openbracket [[
+	some(identifier
+]] parse fails
+
+test id with closebracket [[
+	some)identifier
+]] parse fails
+
+
+
+
+
+

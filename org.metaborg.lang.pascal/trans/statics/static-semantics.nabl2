@@ -13,6 +13,11 @@ imports
   analysis
   nabl-lib
   types
+  
+  
+signature
+     name resolution
+         namespaces Program Var Lab LabRef Func Type
 
 rules // run-time library (=> define separately?)
 
@@ -20,12 +25,20 @@ rules // run-time library (=> define separately?)
     new s,
     
     Var{"eof"} <- s, Var{"eof"} : BoolT(),
+    Var{"nil"} <- s, Var{"nil"} : PointerT(ty),
     
     Type{"integer"} <- s, Type{"integer"} : IntT(),
     Type{"boolean"} <- s, Type{"boolean"} : BoolT(),
+    Type{"string"}  <- s, Type{"string"}  : ArrayT(IntT(),CharT()),
+    Type{"char"}    <- s, Type{"char"}    : CharT(),
+    Type{"text"}	<- s, Type{"file"}	  : FileT(CharT()), // section 6.4.3.5, last note
+    // Type{"char"} <! Type{"string"},
     
-    Proc{"writeln"} <- s, Proc{"writeln"} : ProcT([StringT()]),
-    Proc{"readln"}  <- s, Proc{"readln"}  : ProcT([StringT()]),
+    // _void is used instead of void, because void can be defined as type
+    Type{"_void"} 	<- s, Type{"_void"}	  : VoidT(),    
+    
+    Func{"writeln"} <- s, Func{"writeln"} : FunT([ArrayT(IntT(),CharT())],VoidT()),
+    Func{"readln"}  <- s, Funcc{"readln"}  : FunT([ArrayT(IntT(),CharT())],VoidT()),
      
     Op{ADD()}  <- s, Op{ADD()}  : FunT([IntT(), IntT()], IntT()),    
     Op{MIN()}  <- s, Op{MIN()}  : FunT([IntT(), IntT()], IntT()),     
@@ -42,10 +55,9 @@ rules // run-time library (=> define separately?)
     Op{GEQ()}  <- s, Op{GEQ()}  : FunT([IntT(), IntT()], BoolT()), 
     
     Op{IN()}   <- s, Op{IN()}   : FunT([ty, SetT(ty)], BoolT()), 
-                                  // correct?
                                     
     Op{OR()}   <- s, Op{OR()}   : FunT([BoolT(), BoolT()], BoolT()), 
-    Op{AND()}  <- s, Op{AND()}  : FunT([BoolT(), BoolT()], BoolT()), 
+    Op{AND()}  <- s, Op{AND()}  : FunT([BoolT(), BoolT()], BoolT()).
 
 rules
 
@@ -54,92 +66,107 @@ rules
     [[ h ^ (s) ]], [[ b ^ (s') ]].
     
   [[ ProgramHeading(name, _) ^ (s) ]] :=
-     Program{name} <- s.
+     Program{name} <- s,
+     Program{name} : ProgramT().
     
   [[ Block(lds, cds, tds, vds, pfds, stms, _) ^ (s) ]] := 
-     [[ lds ^ (s) ]],
-     [[ cds ^ (s) ]],
-     [[ tds ^ (s) ]],
-     [[ vds ^ (s) ]],
-     Map[[ pfds ^ (s) ]],
-     Map[[ stms ^ (s) ]].
+  	 distinct D(s)/Lab | error $[Duplicate Label] @NAMES, // distinct labels
+  	 distinct D(s)/LabRef | error $[Duplicate Label usage] @NAMES, // distinct labels
+  	 distinct D(s)/Type | error $[Duplicate type declaration] @NAMES,
+  	 distinct D(s)/Var | error $[Duplicate variable/constant] @NAMES, //distinct variables
+  	 distinct D(s)/Func | error $[Duplicate Function/Procedure] @NAMES,
+     [[ lds ^ (s) ]], // labels
+     [[ cds ^ (s) ]], // constants
+     [[ tds ^ (s) ]], // types
+     [[ vds ^ (s) ]], // variables
+     Map[[ pfds ^ (s) ]], // procedures and functions
+     Map[[ stms ^ (s) ]]. // actual code
      
-//  [[ NoLabelDecls() ^ (s) ]] := true.  
-  [[ LabelDecls(_)  ^ (s) ]] := false | note "label declarations not implemented".
+  [[ None() ^ (s) ]] := true.
   
-//  [[ NoConstDefs()  ^ (s) ]] := true.  
-  [[ ConstDefs(cds) ^ (s) ]] := Map[[ cds ^ (s) ]].  
-  [[ ConstDef(x, c) ^ (s) ]] := Var{x} <- s, [[ c ^ (s) : ty ]], Var{x} : ty.
+  [[ LabelDecls(labels)  ^ (s) ]] := Map[[ labels ^ (s) ]].
+  [[ Label(num) ^ (s) ]] :=
+  	Lab{num} <- s.
+  
+  // Common iterative scope end statement
+  [[ [] ^ (s, s_outer) ]] := true.
+
+  [[ ConstDefs(cds) ^ (s) ]] := [[ cds ^ (s, s) ]].  
+  [[ [ConstDef(x, c) | constdefs ] ^ (s, s_outer) ]] := 
+  	[[ c ^ (s_outer) : ty ]], 
+  	new s',
+  	s ---> s',
+  	Const{x} <- s', 
+  	Const{x} : ty,
+  	Var{x} <- s_outer,
+  	Var{x} : ty,
+  	[[ constdefs ^ (s', s_outer) ]].
+  	// todo: add immutible  
+  	
+  [[ TypeId(t) ^ (s) : ty ]] := 
+	Type{t} -> s,
+	Type{t} |-> d,
+	d : ty.
      
-//  [[ NoTypeDefs()  ^ (s) ]] := true. 
-  [[ TypeDefs(tds) ^ (s) ]] := Map[[ tds ^ (s) ]].
-  [[ TypeDef(x, t) ^ (s) ]] := Type{x} <- s, [[ t ^ (s) : ty ]], Type{x} : ty.
-  
-//  [[ NoVarDecls()   ^ (s) ]] := true.
+  [[ TypeDefs(tds) ^ (s) ]] := [[ tds ^ (s, s) ]].
+  [[ [TypeDef(x, t) | typedefs] ^ (s, s_outer) ]] := 
+  	[[ t ^ (s_outer) : ty ]], 
+  	new s',
+  	s ---> s',
+  	Type{x} <- s', 
+  	Type{x} : ty,
+  	[[ typedefs ^ (s', s_outer) ]].
+  	
+  [[ ArrayType(range, t) ^ (s) : ty ]] := 
+    [[ range ^ (s) : rty ]],
+    [[ t ^ (s) : tty ]],
+    ty == ArrayT(rty, tty). 
+  	
+  [[ SubrangeType(lower, upper) ^ (s) : ty ]] :=
+  	[[ lower ^ (s) : ty ]],
+  	[[ upper ^ (s) : ty ]].
+
   [[ VarDecls(vds)  ^ (s) ]] := Map[[ vds ^ (s) ]].
   [[ VarDecl(xs, t) ^ (s) ]] := [[ t ^ (s) : ty]], MapT[[ xs ^ (s) : ty ]].
   [[ VarId(x) ^ (s) : ty ]] := Var{x} <- s, Var{x} : ty.
- 
-  // note: this does not implement declaration before use
+  // todo: add check for shadowing
   
-  [[ ProcDecl(ph, b) ^ (s) ]] := 
-     new s', s' -P-> s, 
-     [[ ph ^ (s, s') ]], [[ b ^ (s') ]].
+  // [[ FuncDirective(_, _) ^ (s) ]] := false | error "FuncDirectivenot implemented".
+  // [[ FuncId(_, _) ^ (s) ]] := false | error "FuncId not implemented". 
   
-  [[ ProcDirective(_, _) ^ (s) ]] := false | error "ProcDirective not implemented".
-  [[ ProcId(_, _) ^ (s) ]] := false | error "ProcId not implemented".
- 
+  
+rules // procedure and function definitions
   [[ FuncDecl(ph, b) ^ (s) ]] := 
      new s', s' -P-> s, 
      [[ ph ^ (s, s') ]], [[ b ^ (s') ]].
-  
-  [[ FuncDirective(_, _) ^ (s) ]] := false | error "FuncDirectivenot implemented".
-  [[ FuncId(_, _) ^ (s) ]] := false | error "FuncId not implemented". 
-  
-  // [[ Statements(stms) ^ (s) ]] := Map[[ stms ^ (s) ]].
-  
-rules // procedure and function definitions
-
-  [[ ProcHeading(f, params) ^ (s_par, s) ]] := 
-     [[ params ^ (s) : tys ]],
-     Proc{f} <- s_par, Proc{f} : ProcT(tys).
      
   [[ FuncHeading(f, params, t) ^ (s_par, s) ]] := 
      [[ params ^ (s) : tys ]], 
+     [[ t ^ (s) : ty ]], 
      Func{f} <- s_par, Func{f} : FunT(tys, ty), 
-     [[ t ^ (s) : ty ]], Var{f} <- s, Var{f} : ty. // return variable and type
+     Var{f} <- s, Var{f} : ty. // return variable and type
      
   [[ FuncId(f) ^ (s_par, s) ]] :=
      Func{f} -> s_par, Func{f} |-> d, d : FunT(tys, ty).
      // reference to previous declaration?
   
-  //[[ NoParams() ^ (s) : TNil() ]] := true. 
   [[ Params(params) ^ (s) : tys ]] := MapTs[[ params ^ (s) : tys]].
   
-  [[ ValueParams([VarId(x)], t) ^ (s) : ty ]] := 
-     Var{x} <- s, Var{x} : ty, [[ t ^ (s) : ty ]].
-     // todo: generalize to list of variables 
+  [[ ValueParams(vars, t) ^ (s) : ty ]] := 
+  	 MapT[[ vars ^ (s) : ty]],
+	 [[ t ^ (s) : ty ]].
      
-  [[ VarParams([VarId(x)], t) ^ (s) : ty ]] := 
-     Var{x} <- s, Var{x} : ty, [[ t ^ (s) : ty ]].
-     // todo: generalize to list of variables 
-     
-  [[ VarParams(xs, t) ^ (s) : tys ]] := 
-     [[ t ^ (s) : ty ]], MapTs[[ xs ^ (ty, s) : tys ]].
-     
-  [[ VarId(x) ^ (ty, s) : [ty] ]] :=
-     Var{x} <- s, Var{x} : ty, [[ t ^ (s) : ty ]].
-          
+  [[ VarParams(vars, t) ^ (s) : ty ]] := 
+  	 MapT[[ vars ^ (s) : ty]],
+	 [[ t ^ (s) : ty ]].
+               
   [[ PackedArraySchema(bss, t) ^ (s) : ArrayT(tys, ty) ]] := 
      MapTs[[ bss ^ (s) : tys ]], [[ t ^ (s) : ty ]].
      
   [[ UnpackedArraySchema(bss, t) ^ (s) : ArrayT(tys, ty) ]] := 
      MapTs[[ bss ^ (s) : tys ]], [[ t ^ (s) : ty ]].
      // todo: what to do with bounds
-     
-  [[ SubrangeType(c1, c2) ^ (s) : IntT() ]] :=
-     [[ c1 ^ (s) : IntT() ]], [[ c2 ^ (s) : IntT() ]].
-     
+          
   [[ BoundSpec(lo, hi, t) ^ (s) ]] := 
      [[ t ^ (s) : ty ]]. 
      // todo: what are identifiers in bound specification?
@@ -147,22 +174,20 @@ rules // procedure and function definitions
 
 rules // statements
 
-  //[[ Term(stm) ^ (s) ]] := 
-  //   [[ stm ^ (s) ]].
-
   [[ Labeled(l, stm) ^ (s) ]] := 
-     [[ l ^ (s) ]], [[ stm ^ (s) ]]. 
+  	 Lab{l} -> s,
+  	 Lab{l} |-> d | error $[label not declared],
+  	 LabRef{l} <- s,
+     [[ stm ^ (s) ]]. 
   
   [[ Assign(v, e) ^ (s) ]] := 
-     [[ v ^ (s) : ty1 ]], [[ e ^ (s) : ty2 ]], ty1 == ty2.
+     [[ v ^ (s) : ty1 ]], [[ e ^ (s) : ty2 ]], ty1 == ty2 | error $[[ty1] expected] @ v.
      // todo: subtype check?
-    
-  [[ ProcCall(f, params) ^ (s) ]] := 
-     Proc{f} -> s, Proc{f} |-> d, d: ProcT(tys), 
-     [[ params ^ (s) : tys ]].
+
      
-  [[ Goto(l) ^ (s) ]] := true. 
-     // todo: anything to check?
+  [[ Goto(l) ^ (s) ]] := 
+	LabRef{l} -> s,
+	LabRef{l} |-> d | error $[Label never used].
   
   [[ Compound(stms, _) ^ (s) ]] :=
      Map[[ stms ^ (s) ]].
@@ -197,38 +222,43 @@ rules // statements
      [[ e ^ (s) : ty ]], MapT[[ cs ^ (s) : ty ]].
      
   [[ CaseLimb(cnsts, stm) ^ (s) : ty ]] :=
-     Map[[ cnsts ^ (s) : ty ]], [[ stm ^ (s) ]].
+     MapT[[ cnsts ^ (s) : ty ]],
+     [[ stm ^ (s) ]].
      
-  [[ With(vs, stm) ^ (s) ]] := 
-     [[ stm ^ (s) ]], 
-     false | error "analysis for With not implemented".
-     // todo: treat with variables
+  [[ With(v, stm) ^ (s) ]] := 
+     new s',
+     s' -P-> s,
+     [[ v ^ (s) : vty ]],
+     vty == RecordT(rec_d) | error $[This is not a record],
+     rec_d ?===> s_rec,
+     s' -I-> s_rec,
+     [[ stm ^ (s') ]].
+  
+  [[ Set(arr) ^ (s) : ty ]] :=
+  	MapT[[ arr ^ (s) : inner_type ]],
+  	ty == SetT(inner_type).
+  	// todo: Add range test
 
 rules // parameters
 
-  //[[ NoParams() ^ (s) : TNil()  ]] := true. 
   [[ Params(es) ^ (s) : tys ]] := MapTs[[ es ^ (s) : tys ]].
   
 rules // expressions
-
-  //[[ e1 @ Amb([e2 | _ ]) ^ (s) : ty ]] :=
-  //   [[ e2 ^ (s) : ty ]],
-  //   false | warning "ambiguous term" @e1.
 
   [[ True() ^ (s) : BoolT() ]] := true.
   
   [[ False() ^ (s) : BoolT() ]] := true.
 
-  [[ String(_) ^ (s) : StringT() ]] := true.
+  [[ String(_) ^ (s) : ArrayT(IntT(),CharT()) ]] := true.
+  [[ Char(_) ^ (s) : CharT() ]] := true.
   
-  [[ NilE() ^ (s) : NilT() ]] := 
-     false | error "what do do with nil?".
+  [[ NilE() ^ (s) : VoidT() ]] := true.
   
   [[ Not(e) ^ (s) : BoolT() ]] := 
      [[ e ^ (s) : BoolT() ]].
   
   [[ Sign(_, e) ^ (s) : IntT() ]] := 
-     [[ e ^ (s) : IntT() ]]. // todo: ? 
+     [[ e ^ (s) : IntT() ]].
   
   [[ RelOp(e1, op, e2) ^ (s) : ty ]] :=
      Op[[ op ^ (s) : FunT([ty1, ty2], ty) ]],
@@ -253,29 +283,26 @@ rules // expressions
 
 rules // variables
 
+
   [[ Ref(x) ^ (s) : ty ]] :=
      Var{x} -> s, Var{x} |-> d, d : ty.
      
-//  [[ Ref(x) ^ (s) : ty ]] :=
-//     Var{x} -> s, Var{x} |-> d, d : ty. 
-//
-//     
-//  [[ Ref(x) ^ (s) : ty ]] :=
-//     Var{x} -> s, Var{x} |-> d, d : ty;  
-//     Const{x} -> s, Const{x} |-> d, d : ty.   
-//
-//  [[ Ref(x) ^ (s) : ty ]] :=
-//     ns{x} -> s, ns{x} |-> d, d : ty, (ns == Const; ns == Var). 
-         
-     // todo: identifier can also be other things: function, procedure, ...
-     
+  [[ Ref(x) ^ (s) : ty ]] :=
+     Var{x} -> s, Var{x} |-> d, ty == RecordT(d).
+    	     
   [[ IndexVar(v, es) ^ (s) : ty ]] :=
-     [[ v ^ (s) : ArrayT(tys, ty) ]], 
-     MapTs[[ es ^ (s) : tys ]].
+     [[ v ^ (s) : ArrayT(index_ty, ty) ]], 
+     [[ es ^ (s) : index_ty ]].
      
   [[ FieldDes(v, x) ^ (s) : ty ]] :=
-     [[ v ^ (s) : RecordT(s') ]],
-     Field{x} -> s', Field{x} |-> d, d : ty.
+     new s',
+     [[ v ^ (s) : vty ]],
+     vty == RecordT(rec_d) | error $[This is not a record],
+     rec_d ?===> s_rec,
+     s' ---> s_rec,
+     Field{x} -> s', 
+     Field{x} |-> d, 
+     d : ty. 
      
   [[ FileVar(v) ^ (s) : ty ]] := 
      [[ v ^ (s) : FileT(ty) ]].
@@ -287,16 +314,19 @@ rules // variables
      MapT[[ es ^ (s) : ty ]].
      
   [[ FunCall(x, params) ^ (s) : ty ]] := 
-     Func{x} -> s, Func{x} : FunT(tys, ty),
-     [[ params ^ (s) : tys ]].
-
-rules // constants
-
+     [[ params ^ (s) : tys ]],
+     Func{x} -> s, 
+	 Func{x} |-> d,
+	 d : FunT(tys, ty).
+	
   [[ ConstId(_, x) ^ (s) : ty ]] := 
-     Var{x} -> s, Var{x} |-> d, d : ty.
+     Const{x} -> s, Const{x} |-> d, d : ty.
      
-  [[ Int(_)  ^ (s) : IntT()  ]] := true.
+  [[ Int(_)  ^ (s) : IntT() ]] := true.
   [[ Real(_) ^ (s) : RealT() ]] := true.
+  
+  [[ Neg() ^ (s) : IntT() ]] := true.
+  [[ Pos() ^ (s) : IntT() ]] := true.
   
 
    
