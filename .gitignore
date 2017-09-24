@@ -1,3 +1,4 @@
 *.aterm
 *.analysis.txt
-*.pp.pas
+*.pas
+*.pp

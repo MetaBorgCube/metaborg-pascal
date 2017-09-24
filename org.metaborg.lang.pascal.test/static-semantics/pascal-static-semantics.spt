@@ -3,8 +3,177 @@ module pascal-static-semantics
 language Pascal
 start symbol Program
 
-test variable reference [[ 
-  program example0 () ;
+fixture [[
+	program test ();
+	[[...]]
+]]
+
+// Label
+
+test label resolve [[
+label
+  [[1]];
+var
+ x : integer;
+begin
+ [[1]]: x := 3 
+end.
+]] resolve #2 to #1
+
+test goto resolve [[
+label
+  [[1]];
+var
+ x : integer;
+begin
+ [[1]]: x := 3;
+ goto [[1]] 
+end.
+]] resolve #3 to #2
+
+// Constants
+
+test constant resolve [[
+const
+ 	[[maxnumber]] = 500;
+ var
+ 	number : integer;
+ begin
+ 	number := [[maxnumber]]
+ end.
+]] resolve #2 to #1
+
+test constant resolve from type [[
+ const
+ 	[[maxnumber]] = 500;
+  type
+  	intArr = array [1..[[maxnumber]] ] of integer;
+ begin
+ end.
+]] resolve #2 to #1
+
+test constant resolve from procedure [[
+ const
+ 	[[maxnumber]] = 500;
+procedure f(x: integer);
+	begin
+		x := [[maxnumber]]
+	end;
+ begin
+ end.
+]] resolve #2 to #1
+
+test constant resolve from function [[
+ const
+ 	[[maxnumber]] = 500;
+function f(x: integer): integer;
+	begin
+		f := [[maxnumber]]
+	end;
+ begin
+ end.
+]] resolve #2 to #1
+
+test constant resolve from nested [[
+ const
+ 	[[maxnumber]] = 500;
+function f(x: integer): integer;
+	function g(x: integer): integer;
+		begin
+			g := [[maxnumber]]
+		end;
+	begin
+		f := g(1)
+	end;
+ begin
+ end.
+]] resolve #2 to #1
+
+test constant resolve from nested constant [[
+ const
+ 	[[maxnumber]] = 500;
+function f(x: integer): integer;
+	const
+	  mxn = [[maxnumber]];
+	begin
+		f := mxn
+	end;
+ begin
+ end.
+]] resolve #2 to #1
+
+// Type
+
+test type resolve [[
+  type
+  	[[intArr]] = array [1..50] of integer;
+  var
+  	numArr : [[intArr]];
+  begin
+  end.  	
+]] resolve #2 to #1
+
+test type resolve to function [[
+  type
+  	[[intArr]] = array [1..50] of integer;
+  function f(x : intArr) : [[intArr]];
+	  begin
+	  	f := x
+	  end;
+  begin
+  end.  	
+]] resolve #2 to #1
+
+test type resolve to function parameter [[
+  type
+  	[[intArr]] = array [1..50] of integer;
+  function f(x : [[intArr]]) : intArr;
+	  begin
+	  	f := x
+	  end;
+  begin
+  end.  	
+]] resolve #2 to #1
+
+test type resolve to function type [[
+  type
+  	[[intArr]] = array [1..50] of integer;
+  function f(x : intArr) : intArr;
+  	  type
+  	  	intMatrix = array[1..50] of [[intArr]];
+	  begin
+	  	f := x
+	  end;
+  begin
+  end.  	
+]] resolve #2 to #1
+
+test type resolve to procedure [[
+  type
+  	[[intArr]] = array [1..50] of integer;
+  procedure f(x : [[intArr]]);
+	  begin
+	  end;
+  begin
+  end.  	
+]] resolve #2 to #1
+
+
+test type resolve to function type [[
+  type
+  	[[intArr]] = array [1..50] of integer;
+  procedure f(x : intArr);
+  	  type
+  	  	intMatrix = array[1..50] of [[intArr]];
+	  begin
+	  end;
+  begin
+  end.  	
+]] resolve #2 to #1
+
+// variables
+
+test variable resolve [[ 
   var
     [[x]] : boolean;
   begin
@@ -12,8 +181,118 @@ test variable reference [[
   end.
 ]] resolve #2 to #1 
 
-test variable reference [[ 
-  program example0 () ;
+test variable resolve in higher scope [[ 
+  var
+    [[x]] : boolean;
+  procedure f(i : boolean);
+    var
+      [[x]] : boolean;
+    begin
+      i := [[x]]
+    end;
+  begin
+    x := f(true)
+  end.
+]] resolve #3 to #2 
+
+test variable resolve to lower scope [[ 
+  var
+    [[x]] : boolean;
+  procedure f(i : boolean);
+    begin
+      i := [[x]]
+    end;
+  begin
+    x := f(true)
+  end.
+]] resolve #2 to #1 
+
+test variable resolve nested function [[
+  var
+    [[x]]: integer;
+  function f(s: integer): integer;
+  	  function g(s: integer): integer;
+	  begin
+	  	g := [[x]]
+	  end;
+  begin
+  	f := g([[x]])
+  end;
+ begin
+ 	x := f(2)
+ end.
+]] resolve #2 to #1
+
+// Function
+
+test function resolve [[
+  var
+    x: integer;
+  function [[f]](x : integer): integer;
+  begin
+  	f := 2
+  end;
+ begin
+ 	x := [[f]](1)
+ end.
+]] resolve #2 to #1
+
+test function parameter resolve [[
+  var
+    [[x]]: integer;
+  function f([[x]]: integer): integer;
+  begin
+  	f := [[x]]
+  end;
+ begin
+ 	x := f(2)
+ end.
+]] resolve #3 to #2
+
+test nested function parameter resolve [[
+  var
+    [[x]]: integer;
+  function f([[x]]: integer): integer;
+  	  function g([[x]]: integer): integer;
+	  begin
+	  	g := [[x]]
+	  end;
+  begin
+  	f := g([[x]])
+  end;
+ begin
+ 	x := f(2)
+ end.
+]] resolve #4 to #3
+
+test nested function parameter resolve 2 [[
+  var
+    [[x]]: integer;
+  function f([[x]]: integer): integer;
+  	  function g(s: integer): integer;
+	  begin
+	  	g := [[x]]
+	  end;
+  begin
+  	f := g([[x]])
+  end;
+ begin
+ 	x := f(2)
+ end.
+]] resolve #3 to #2
+
+// Procedure
+
+test procedure resolve [[
+procedure [[f]](x : integer);
+  begin
+  end;
+ begin
+ 	[[f]](1)
+ end.
+]] resolve #2 to #1
+
+test procedure parameter resolve [[ 
   var
     x : boolean;
   procedure f([[x]] : integer); 
@@ -23,3 +302,184 @@ test variable reference [[
   begin
   end.
 ]] resolve #2 to #1 
+
+test nested procedure parameter resolve [[
+  var
+    [[x]]: integer;
+  procedure f([[x]]: integer);
+  	  procedure g([[x]]: integer);
+	  begin
+	  	x := [[x]]
+	  end;
+  begin
+  	g([[x]])
+  end;
+ begin
+ 	f(2)
+ end.
+]] resolve #4 to #3
+
+test nested procedure parameter resolve 2 [[
+  var
+    [[x]]: integer;
+  procedure f([[x]]: integer);
+  	  procedure g(s: integer);
+	  begin
+	  	s := [[x]]
+	  end;
+  begin
+  	g([[x]])
+  end;
+ begin
+ 	f(2)
+ end.
+]] resolve #3 to #2
+
+
+// errors:
+
+// duplication
+test label duplication [[
+label
+	1, 1;
+begin
+end.
+]] >= 1 error
+
+test label duplication non-exact [[
+label 
+	1, 01;
+begin
+end.
+]] >= 1 error
+
+test label usage duplication [[
+label
+	1;
+var
+	x : integer;
+begin
+	1: x := 1;
+	1: x := x
+end.
+]] >= 1 error
+
+test constant duplication [[
+  const
+    some = 10;
+    some = 20;
+  begin
+  end.
+]] >= 1 error
+
+
+test type duplication [[
+  type
+  	intArr = array[1..10] of integer;
+  	intArr = array[11..21] of integer;
+  begin
+  end.
+]] >= 1 error
+
+test variable duplication [[
+  var
+  	x : integer;
+  	x : boolean;
+ begin
+ end.
+]] >= 1 error
+
+test function duplication [[
+  function f(x:integer): integer;
+	  begin
+	  	f := x
+	  end;
+  function f(s:integer): integer;
+	  begin
+	  end;
+  begin
+  end.
+]] >= 1 error
+
+// missing definition
+
+test missing label [[
+  var
+   i : integer;
+  begin
+    1: i := 3
+  end.
+]] >= 1 error
+
+test missing label 2 [[
+  label
+    1;
+  var
+   i : integer;
+  begin
+    goto 1
+  end.
+]] >= 1 error
+
+test missing constant [[
+  type
+  	intArr = array [1..limit] of integer;
+  begin
+  end.
+]] >= 1 error
+
+test missing type variable [[
+  var
+  	x: intArr;
+  begin
+  end.
+]] >= 1 error
+
+test missing type function [[
+  function f(x:integer) : intArr;
+  	begin
+  	  f := x
+  	end;
+  begin
+  end.
+ ]] >= 1 error
+
+
+test missing type function parameter [[
+  function f(x:intArr) : integer;
+  	begin
+  	  f := 3
+  	end;
+  begin
+  end.
+ ]] >= 1 error
+
+test missing type procedure parameter [[
+  procedure f(x:intArr);
+  	begin
+  	end;
+  begin
+  end.
+ ]] >= 1 error
+ 
+test missing function [[
+var
+  i : integer;
+begin
+  i := f(2)
+end.
+]] >= 1 error
+
+test missing procedure [[
+begin
+  p(3)
+end.
+]] >= 1 error
+ 
+ 
+// not resolve to higher scope
+
+// Same name different scope
+
+
+

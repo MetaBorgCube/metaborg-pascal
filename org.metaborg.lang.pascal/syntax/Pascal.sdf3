@@ -136,41 +136,42 @@ context-free syntax // Procedure and Function Definitions
 context-free syntax // Statements
  
   Statement.Labeled =
-    <<Label> : <Statement>>
-    // should probably not be another labeled statement
+    <<Label> : <UnlabeledStatement>>
+    
+  Statement = <<UnlabeledStatement>>
     
   // optional empty statement at end of block
   //  Term.NoTerm = <>
   Term.Term   = <;> 
 
-  Statement.Assign =
+  UnlabeledStatement.Assign =
     <<Variable> := <Expression>>
 
-  Statement.ProcCall =
+  UnlabeledStatement.ProcCall =
     <<Identifier><ActualParameters>>
     
-  Statement.Goto =
+  UnlabeledStatement.Goto =
     <goto <Label>> {case-insensitive}
   
-  Statement.Compound = <
+  UnlabeledStatement.Compound = <
     begin 
       <{Statement ";\n"}+> 
       <Term?>
     end
   > {case-insensitive}
   
-  Statement.While = <
+  UnlabeledStatement.While = <
     while <Expression> do 
       <Statement>
   > {case-insensitive}
   
-  Statement.Repeat = <
+  UnlabeledStatement.Repeat = <
     repeat 
       <{Statement ";"}+> 
     until <Expression>
   > {case-insensitive}
   
-  Statement.For = <
+  UnlabeledStatement.For = <
     for <Identifier> := <Expression> <UpDown> <Expression> do 
       <Statement>
   > {case-insensitive}
@@ -178,19 +179,19 @@ context-free syntax // Statements
   UpDown.Up = <to> {case-insensitive}
   UpDown.Down = <downto> {case-insensitive}
 
-  Statement.If = <
+  UnlabeledStatement.If = <
     if <Expression> then 
       <Statement>
   > {case-insensitive}
   
-  Statement.IfElse = <
+  UnlabeledStatement.IfElse = <
     if <Expression> then 
       <Statement>
     else 
       <Statement>
   > {case-insensitive}
   
-  Statement.Case = <
+  UnlabeledStatement.Case = <
     case <Expression> of
       <CaseLimb+>
     end
@@ -199,7 +200,7 @@ context-free syntax // Statements
   CaseLimb.CaseLimb = 
     <<{Constant ", "}+> : <Statement>;>
 
-  Statement.With = <
+  UnlabeledStatement.With = <
     with <{Variable ", "}+> do
       <Statement>
   > {case-insensitive}
@@ -213,9 +214,10 @@ context-free syntax // Expressions
   Expression        = <(<Expression>)> {bracket}  
   Expression        = Variable
   Expression        = Number
+  Expression		= Boolean
   Expression.String = String
-  Expression.True   = <true> {case-insensitive}
-  Expression.False  = <false> {case-insensitive}
+  Expression.Char   = Char
+  Expression		= Boolean
   Expression.NilE   = <nil> {case-insensitive}
   Expression.Not    = <not <Expression>> {case-insensitive}
   Expression.Set    = <[<{Expression ","}*>]>
@@ -279,7 +281,9 @@ context-free syntax // Types
   TypeIdentifier.TypeId = Identifier
   
   SimpleType.EnumType = 
-    <(<{Identifier ", "}+>)>
+    <(<{EnumValue ", "}+>)>
+  
+  EnumValue.EnumValue = <<Identifier>>
   
   SimpleType.SubrangeType =
     <<Constant> .. <Constant>>
@@ -311,26 +315,38 @@ context-free syntax // Record Fields
   > {case-insensitive}
   
   FieldList.FieldList = <
-    <{RecordSection "\n"}*> 
-    <Variants>
+    <{RecordSection ";"}+> 
+    <FieldListOptional?>
   >
   
-  FieldList.FieldList = 
-    <<{RecordSection "\n"}*>>
+  FieldList.FieldList= <<OptionalVariants?>>
+  
+  FieldListOptional.Optional = <
+  	;
+  	<OptionalVariants?>
+  >
+  
+  OptionalVariants.Variants = <
+  	<{Variants ";"}+>
+  	<Term?>
+  >
+   
 
   RecordSection.RecordSection =
-    <<{FieldIdentifier ", "}+> : <Type>;>
+    <<{FieldIdentifier ", "}+> : <Type>>
 
   FieldIdentifier.FieldId = Identifier
   
   Variants.Variant = <
-    case <Tagfield?> <TypeIdentifier> of 
-      <{Variant ";\n"}+>;
+    case <VariantSelector> of 
+      <{Variant ";\n"}+>
   > {case-insensitive}
 
-  Tagfield.Tag = <<Identifier> :>
+  VariantSelector.Selector = <<Tagfield?> <TypeIdentifier>>
+  
+  Tagfield.FieldId = <<Identifier> :>
 
-  Variant.Variant = 
+  Variant.VariantCase = 
     <<{Constant ", "}+> : (<FieldList>)>
 
 context-free syntax // Input/Output
@@ -346,11 +362,11 @@ context-free syntax // Input/Output
 
 lexical syntax // Variable and Identifier Categories
 
-  Identifier = [a-zA-Z][a-zA-Z0-9\_]*
+  Identifier = [a-zA-Z][a-zA-Z0-9]*
   
 lexical restrictions
 
-  Identifier -/- [a-zA-Z0-9\_]
+  Identifier -/- [a-zA-Z0-9]
 
 context-free syntax
 
@@ -370,6 +386,7 @@ context-free syntax
   Identifier = <true>      {reject,case-insensitive}
   Identifier = <false>     {reject,case-insensitive}
   Identifier = <not>       {reject,case-insensitive}
+  Identifier = <with>      {reject,case-insensitive}
   
 context-free syntax
   
@@ -381,7 +398,12 @@ context-free syntax // Low Level Definitions
   
   Constant.ConstId = Sign? Identifier 
   Constant         = Number
-  Constant         = String
+  Constant.String  = String
+  Constant.Char    = Char
+  Constant		   = Boolean
+  
+  Boolean.True = <true> {case-insensitive}
+  Boolean.False = <false> {case-insensitive}
    
   Number.Int  = Integernumber 
   Number.Real = Realnumber
@@ -394,7 +416,7 @@ lexical syntax // Numbers
   Integernumber = Digitsequence
   Realnumber    = Digitsequence "." Digitsequence? Scalefactor?
   Realnumber    = Digitsequence Scalefactor
-  Scalefactor   = [Ee] [\+\-]? Digitsequence
+  Scalefactor   = [e] [\+\-]? Digitsequence
 
   Unsigneddigitsequence = [0-9]+
   Digitsequence = [\+\-]? Unsigneddigitsequence
@@ -406,9 +428,10 @@ lexical restrictions
   
 lexical syntax // Strings
 
-  String = "'" Stringcharacter+  "'"
-  Stringcharacter = ~[\'] 
-  Stringcharacter = "''"
+  String = "'" StringCharacter StringCharacter+  "'"
+  Char = "'" StringCharacter  "'"
+  StringCharacter = ~[\'] 
+  StringCharacter = "''"
 
 lexical syntax // layout
   

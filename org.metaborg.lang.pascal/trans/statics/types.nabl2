@@ -4,10 +4,12 @@ signature
 
   types
   
+  	 ProgramT()
      RealT() 
      IntT() 
      BoolT()
      StringT()
+     ChartT()
      FunT(type, type) 
      ProcT(type)
      ArrayT(type)
@@ -15,10 +17,9 @@ signature
      PointerT(type) 
      FileT(type)
      SetT(type)
-     RecordT(scope)
+     RecordT(type)
      SubrangeT(Constant, Constant)
-     EnumT(scope)         
-     NilT()
+     EnumT(type)   
      
 //  subtypes
 //  
@@ -43,27 +44,13 @@ rules // subtype relation
 
 rules // types
 
-  // type equality: nominal or structural?
-  
-  // [[ IntType()  ^ (s) : IntT()  ]] := true.
-  
-  // [[ BoolType() ^ (s) : BoolT() ]] := true.
-
   [[ TypeId(x) ^ (s) : ty ]] := 
      Type{x} -> s, Type{x} |-> d, d : ty.
-  
-  [[ EnumType(xs) ^ (s) : EnumT(s') ]] := 
-     new s', false | note "EnumType not implemented".
-    
-  [[ SubrangeType(c1, c2) ^ (s) : SubrangeT(c1, c2) ]] :=
-     [[ c1 ^ (s) : IntT() ]], [[ c2 ^ (s) : IntT() ]].
     
   [[ Packed(t) ^ (s) : ty ]] :=
-     false | note "Packed type not implemented".    
-    
-  [[ ArrayType(ts, t) ^ (s) : ArrayT(tys, ty) ]] :=
-     MapTs[[ ts ^ (s) : tys ]], [[ t ^ (s) : ty ]].
-
+	 [[ t ^ (s) : ty ]],
+	 false |  note $[Packed not supported].
+	 
   [[ SetType(t)     ^ (s) : SetT(ty)     ]] := [[ t ^ (s) : ty ]].    
   
   [[ FileType(t)    ^ (s) : FileT(ty)    ]] := [[ t ^ (s) : ty ]].   
@@ -72,22 +59,57 @@ rules // types
          
 rules // record types
 
-  [[ RecordType(fs) ^ (s) : RecordT(s') ]] :=
-     new s', s' -P-> s, [[ fs ^ (s') ]].
+  [[ [ RecordDef(name, RecordType(fs)) | typedefs ] ^ (s, s_outer) ]] :=
+      new s',
+      s ---> s',
+      Type{name} <- s', 
+      Type{name} : RecordT(Type{name}),
+      new s_record,
+      Type{name} ===> s_record,
+      distinct D(s_record)/Field | error $[Duplicate fields] @NAMES, 
+      [[ fs ^ (s_record, s_outer) ]], 
+      [[ typedefs ^ (s', s_outer) ]].
+  
+    [[ [ EnumDef(name,values) | typedefs ] ^ (s, s_outer) ]] :=
+      new s',
+      s ---> s',
+      Type{name} <- s', 
+      Type{name} : EnumT(Type{name}),
+      new s_enum,
+      s' ---> s_enum,
+      [[ values ^ (s_enum, s_outer) : EnumT(Type{name})]], 
+      [[ typedefs ^ (s', s_outer) ]].
+      
+  [[ EnumType(xs) ^ (s, s_outer) : ty ]] := 
+  	 Map2T[[ xs ^ (s, s_outer) : ty ]].
+
+  [[ EnumValue(value) ^ (s, s_outer) : ty ]] :=
+  	 Var{value} <- s, Var{value} : ty,
+  	 Const{value} <- s, Const{value} : ty.
      
-  [[ FieldList(rss) ^ (s) ]] :=
-     Map[[ rss ^ (s) ]].
+  [[ FieldList(rss, variants, _) ^ (s, s_outer) ]] :=
+     Map2[[ rss ^ (s, s_outer) ]],
+     Map2[[ variants ^ (s, s_outer) ]].
      
-  [[ FieldList(rss, variant) ^ (s) ]] :=
-     Map[[ rss ^ (s) ]],
-     false | note "record type with variant not implemented". 
-     
-  [[ RecordSection(xs, t) ^ (s) ]] :=
-     [[ t ^ (s) : ty ]], 
+  [[ RecordSection(xs, t) ^ (s, s_outer) ]] :=
+     [[ t ^ (s_outer) : ty ]], 
      MapT[[ xs ^ (s) : ty ]].
      
   [[ FieldId(x) ^ (s) : ty ]] := 
-     Field{x} <- s, Field{x} : ty.
+     Field{x} <- s, Field{x} : ty,
+     Var{x} <-s, Var{x} : ty.
      
-rules  // todo: variants
+rules  
+
+  [[ Variant(sel, cases) ^ (s, s_outer) ]] := // todo: cases should be unique
+  	[[ sel ^ (s, s_outer) : ty ]],
+  	Map2T[[ cases ^ (s, s_outer) : ty ]].
+  	
+  [[ Selector(tag, tyid) ^ (s, s_outer) : ty ]] :=
+  	[[ tyid ^ (s_outer) : ty]],
+  	[[ tag ^ (s) : ty]].
+  	
+  [[ VariantCase(values, fields) ^ (s, s_outer) : ty ]] :=
+  	MapT[[ values ^ (s) : ty ]],
+  	[[ fields ^ (s, s_outer) ]].
   

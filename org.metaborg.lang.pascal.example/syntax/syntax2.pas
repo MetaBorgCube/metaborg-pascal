@@ -4,6 +4,6 @@ program Sort(input, output);
       x := 1
     end;
 begin
-  ReadArr(size, arr)
+  readArr(size, arr)
 end.
 
