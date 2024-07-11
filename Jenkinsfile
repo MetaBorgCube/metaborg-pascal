@@ -9,10 +9,30 @@ properties([
   disableConcurrentBuilds()
 ])
 
-node{
+node('spoofax-buildenv-jenkins') {
+  // In Jenkins, under Tools, add a JDK Installation with:
+  // - Name: JDK 11
+  // - JAVA_HOME: /usr/lib/jvm/java-11-openjdk-amd64
+  // - Install automatically: false
+  // Ensure the JDK 11 is available in the Spoofax Docker image at the specified path.
+  jdk = tool name: 'JDK 11'
+  env.JAVA_HOME = "${jdk}"
+  
   try{
     notifyBuild('Started')
 
+    stage('Echo') {
+      // Print important variables and versions for debugging purposes.
+      exec 'env'
+      exec 'bash --version'
+      exec 'git --version'
+      exec 'python3 --version'
+      exec 'pip3 --version'
+      exec "$JAVA_HOME/bin/java -version"
+      exec "$JAVA_HOME/bin/javac -version"
+      exec 'mvn --version'
+    }
+      
     stage('Checkout') {
       checkout scm
       sh "git clean -fXd"
